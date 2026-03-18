@@ -354,5 +354,72 @@ drawer.value="";
 
 });
 </script>
+  <!-- زر احترافي ثابت -->
+<div class="floating-btn" onclick="goToPage()">
+    <span>الانتقال</span>
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="white" viewBox="0 0 16 16">
+        <path d="M1 8a.5.5 0 0 1 .5-.5h10.793L8.146 4.354a.5.5 0 1 1 .708-.708l5 5a.5.5 0 0 1 
+        0 .708l-5 5a.5.5 0 0 1-.708-.708L12.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
+    </svg>
+</div>
+
+<style>
+.floating-btn{
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    background: linear-gradient(135deg, #007bff, #00c6ff);
+    color: white;
+    padding: 15px 28px;
+    font-size: 18px;
+    font-family: 'Cairo', sans-serif;
+
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+
+    transition: all 0.3s ease;
+    z-index: 9999;
+}
+
+/* تأثير hover */
+.floating-btn:hover{
+    transform: translateX(-50%) scale(1.05);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.35);
+}
+
+/* تأثير الضغط */
+.floating-btn:active{
+    transform: translateX(-50%) scale(0.95);
+}
+
+/* أنيميشن دخول */
+@keyframes fadeUp{
+    from{
+        opacity:0;
+        transform: translate(-50%, 50px);
+    }
+    to{
+        opacity:1;
+        transform: translate(-50%, 0);
+    }
+}
+
+.floating-btn{
+    animation: fadeUp 0.6s ease;
+}
+</style>
+
+<script>
+function goToPage(){
+    window.location.href = "https://hr-directions.github.io/Shift-review-/";
+}
+</script>
 </body>
 </html>

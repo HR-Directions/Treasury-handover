@@ -77,16 +77,23 @@ button{padding:6px;border:none;border-radius:6px;cursor:pointer;}
 </tr>
 <tr>
 <td>مبيعات فيزا</td>
-<td><button class="add" onclick="openPopup('visa')">+ إضافة</button></td>
-<td><input id="visaTotal" class="total" readonly></td>
-</tr>
+
 <tr>
 <td>الإجمالي</td>
 <td colspan="2"><input id="total" class="total" readonly></td>
 </tr>
 <tr>
 <td>فعلي</td>
-<td colspan="2"><input id="actual" oninput="convertNumber(this);calc()"></td>
+<td colspan="2"><input id="actua<td>
+  <button class="add" onclick="openPopup('visa')">+ إضافة</button>
+</td>
+
+<td>
+  <input id="visaTotal" class="total" placeholder="إجمالي المبلغ" readonly>
+  <br>
+  <input id="visaCountTotal" class="total" placeholder="عدد العمليات" readonly>
+</td>
+</tr>l" oninput="convertNumber(this);calc()"></td>
 </tr>
 <tr>
 <td>العجز / الزيادة</td>
@@ -296,7 +303,14 @@ window.savePopup=function(){
 let a=+amount.value||0;
 if(mode=="insta"){instaArr.push({amount:a,mobile:mobileSelect.value,name:nameField.value}); renderInsta();}
 if(mode=="wallet"){walletArr.push({amount:a,mobile:mobileSelect.value,name:nameField.value}); renderWallet();}
-if(mode=="visa"){visaArr.push({amount:a,ref:note.value:note.value}); renderVisa();}
+if(mode=="visa"){
+  visaArr.push({
+    amount: a,
+    ref: note.value,
+    count: document.getElementById('modalCount')?.value || 0
+  });
+  renderVisa();
+}
 if(mode=="purchase"){purchases.push({amount:a,note:note.value,user:user.value}); renderPurchases();}
 if(mode=="expense"){expenses.push({amount:a,note:note.value,user:user.value}); renderExpenses();}
 amount.value=note.value=user.value="";
@@ -306,7 +320,39 @@ closePopup();
 // render + حذف
 function renderInsta(){ let t=0; instaTable.innerHTML=""; instaArr.forEach((i,idx)=>{ t+=i.amount; let row=document.createElement("tr"); row.innerHTML=`<td>${i.amount}</td><td>${i.mobile}</td><td>${i.name}</td><td><span class="removeBtn">-</span></td>`; row.querySelector(".removeBtn").addEventListener("click",()=>{instaArr.splice(idx,1); renderInsta();}); instaTable.appendChild(row);} ); instaTotal.value=t; calc(); }
 function renderWallet(){ let t=0; walletTable.innerHTML=""; walletArr.forEach((i,idx)=>{ t+=i.amount; let row=document.createElement("tr"); row.innerHTML=`<td>${i.amount}</td><td>${i.mobile}</td><td>${i.name}</td><td><span class="removeBtn">-</span></td>`; row.querySelector(".removeBtn").addEventListener("click",()=>{walletArr.splice(idx,1); renderWallet();}); walletTable.appendChild(row);} ); walletTotal.value=t; calc(); }
-function renderVisa(){ let t=0; visaTable.innerHTML=""; visaArr.forEach((i,idx)=>{ t+=i.amount; let row=document.createElement("tr"); row.innerHTML=`<td>${i.amount}</td><td>${i.ref}</td><td><span class="removeBtn">-</span></td>`; row.querySelector(".removeBtn").addEventListener("click",()=>{visaArr.splice(idx,1); renderVisa();}); visaTable.appendChild(row);} ); visaTotal.value=t; calc(); }
+function renderVisa(){
+  let t = 0;
+  let countTotal = 0;
+
+  visaTable.innerHTML = "";
+
+  visaArr.forEach((i,idx)=>{
+    t += i.amount;
+    countTotal += parseInt(i.count) || 0;
+
+    let row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${i.amount}</td>
+      <td>${i.ref}</td>
+      <td>${i.count || 0}</td>
+      <td><span class="removeBtn">-</span></td>
+    `;
+
+    row.querySelector(".removeBtn").addEventListener("click",()=>{
+      visaArr.splice(idx,1);
+      renderVisa();
+    });
+
+    visaTable.appendChild(row);
+  });
+
+  visaTotal.value = t;
+
+  // ✅ إجمالي عدد العمليات
+  document.getElementById('visaCountTotal').value = countTotal;
+
+  calc();
+}
 function renderPurchases(){ let t=0; purchaseTable.innerHTML=""; purchases.forEach(p=>{ t+=p.amount; purchaseTable.innerHTML+=`<tr><td>${p.amount}</td><td>${p.note}</td><td>${p.user}</td></tr>`; }); pTotal.value=t;}
 function renderExpenses(){ let t=0; expenseTable.innerHTML=""; expenses.forEach(e=>{ t+=e.amount; expenseTable.innerHTML+=`<tr><td>${e.amount}</td><td>${e.note}</td><td>${e.user}</td></tr>`; }); eTotal.value=t;}
 
@@ -317,40 +363,7 @@ diff.value=(-actual.value||0)-(-total.value||0);
 }
 
 // حفظ البيانات + تفريغ الحقول بعد الحفظ
-window.saveData=function(){
-if(!drawer.value){ alert("الرجاء إدخال رقم الدرج"); return; }
-let treasuryNum=drawer.value;
-let data={
-branchKey:branchSelect.value,
-branchName:branchSelect.options[0].text,
-drawerManager:drawerManager.value,
-reviewer:reviewer.value,
-date:date.value,
-day:dayInput.value,
-drawer:drawer.value,
-cash:+cash.value||0,
-insta:instaArr,
-wallet:walletArr,
-visa:visaArr,
-purchases,
-expenses,
-total:total.value,
-actual:actual.value,
-diff:diff.value
-};
-db.ref("treasury").push(data)
-.then(()=>{
-alert("تم الحفظ ✅ رقم الخزينة: "+treasuryNum);
-// تفريغ الحقول
-cash.value=actual.value=total.value=diff.value="";
-instaArr=[]; walletArr=[]; visaArr=[]; purchases=[]; expenses=[];
-instaTable.innerHTML=""; walletTable.innerHTML=""; visaTable.innerHTML="";
-purchaseTable.innerHTML=""; expenseTable.innerHTML="";
-instaTotal.value=walletTotal.value=visaTotal.value=pTotal.value=eTotal.value="";
-drawer.value="";
-})
-.catch(err=>{ alert("حدث خطأ أثناء الحفظ"); console.error(err); });
-}
+
 
 });
 </script>
@@ -374,7 +387,74 @@ drawer.value="";
     align-items: center;
     gap: 10px;
 
-    background: linear-gradient(135deg, #007bff, #00c6ff);
+    background: linear-gradient(135dwindow.saveData=function(){
+
+if(!drawer.value){ 
+  alert("الرجاء إدخال رقم الدرج"); 
+  return; 
+}
+
+let treasuryNum=drawer.value;
+
+// ✅ حساب إجمالي الفيزا وعدد العمليات
+let visaTotalCalc = visaArr.reduce((sum,v)=>sum+(+v.amount||0),0);
+let visaCountTotalCalc = visaArr.reduce((sum,v)=>sum+(parseInt(v.count)||0),0);
+
+let data={
+  branchKey:branchSelect.value,
+
+  // ✅ تصحيح اسم الفرع (مش أول عنصر)
+  branchName:branchSelect.options[branchSelect.selectedIndex]?.text || "",
+
+  drawerManager:drawerManager.value,
+  reviewer:reviewer.value,
+  date:date.value,
+  day:dayInput.value,
+  drawer:drawer.value,
+
+  cash:+cash.value||0,
+  insta:instaArr,
+  wallet:walletArr,
+
+  // ✅ الفيزا بكل بياناتها (المبلغ + الترحيلة + عدد العمليات)
+  visa:visaArr,
+
+  // ✅ (اختياري لكن مهم)
+  visaTotal: visaTotalCalc,
+  visaCountTotal: visaCountTotalCalc,
+
+  purchases,
+  expenses,
+
+  total:total.value,
+  actual:actual.value,
+  diff:diff.value
+};
+
+db.ref("treasury").push(data)
+.then(()=>{
+  alert("تم الحفظ ✅ رقم الخزينة: "+treasuryNum);
+
+  // تفريغ الحقول
+  cash.value=actual.value=total.value=diff.value="";
+  instaArr=[]; walletArr=[]; visaArr=[]; purchases=[]; expenses=[];
+  instaTable.innerHTML=""; walletTable.innerHTML=""; visaTable.innerHTML="";
+  purchaseTable.innerHTML=""; expenseTable.innerHTML="";
+
+  instaTotal.value=walletTotal.value=visaTotal.value=pTotal.value=eTotal.value="";
+
+  // ✅ تصفير عدد العمليات
+  let visaCountEl = document.getElementById('visaCountTotal');
+  if(visaCountEl) visaCountEl.value = "";
+
+  drawer.value="";
+})
+.catch(err=>{
+  alert("حدث خطأ أثناء الحفظ"); 
+  console.error(err); 
+});
+
+}eg, #007bff, #00c6ff);
     color: white;
     padding: 15px 28px;
     font-size: 18px;

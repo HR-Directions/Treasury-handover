@@ -296,7 +296,7 @@ window.savePopup=function(){
 let a=+amount.value||0;
 if(mode=="insta"){instaArr.push({amount:a,mobile:mobileSelect.value,name:nameField.value}); renderInsta();}
 if(mode=="wallet"){walletArr.push({amount:a,mobile:mobileSelect.value,name:nameField.value}); renderWallet();}
-if(mode=="visa"){visaArr.push({amount:a,ref:note.value}); renderVisa();}
+if(mode=="visa"){visaArr.push({amount:a,ref:note.value:note.value}); renderVisa();}
 if(mode=="purchase"){purchases.push({amount:a,note:note.value,user:user.value}); renderPurchases();}
 if(mode=="expense"){expenses.push({amount:a,note:note.value,user:user.value}); renderExpenses();}
 amount.value=note.value=user.value="";

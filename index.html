@@ -77,7 +77,14 @@ button{padding:6px;border:none;border-radius:6px;cursor:pointer;}
 </tr>
 <tr>
 <td>مبيعات فيزا</td>
-
+<td>
+  <input id="visaTotal" class="total" placeholder="إجمالي المبلغ" readonly>
+  <br>
+  <input id="visaCountTotal" class="total" placeholder="عدد العمليات" readonly>
+</td>
+</tr>l" oninput="convertNumber(this);calc()"></td>
+</tr>
+<tr>
 <tr>
 <td>الإجمالي</td>
 <td colspan="2"><input id="total" class="total" readonly></td>
@@ -88,14 +95,7 @@ button{padding:6px;border:none;border-radius:6px;cursor:pointer;}
   <button class="add" onclick="openPopup('visa')">+ إضافة</button>
 </td>
 
-<td>
-  <input id="visaTotal" class="total" placeholder="إجمالي المبلغ" readonly>
-  <br>
-  <input id="visaCountTotal" class="total" placeholder="عدد العمليات" readonly>
-</td>
-</tr>l" oninput="convertNumber(this);calc()"></td>
-</tr>
-<tr>
+
 <td>العجز / الزيادة</td>
 <td colspan="2"><input id="diff" class="total" readonly></td>
 </tr>

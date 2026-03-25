@@ -26,6 +26,7 @@ button{padding:8px 15px;border:none;border-radius:6px;cursor:pointer;font-weight
 .removeBtn{background:#e74c3c;color:#fff;padding:2px 6px;border-radius:4px;cursor:pointer;font-size:12px;}
 .footer-summary {font-size: 13px; background: #f9f9f9; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-top: 5px;}
 .btn-group {display:flex; gap:10px; margin-top:15px;}
+.success-icon {font-size: 40px; color: #27ae60; margin-bottom: 10px;}
 @media(max-width:800px){.flex{flex-direction:column;}}
 </style>
 </head>
@@ -169,16 +170,13 @@ button{padding:8px 15px;border:none;border-radius:6px;cursor:pointer;font-weight
 <div class="popup" id="popup">
 <div class="box">
 <h4 id="popupTitle">إضافة</h4>
-
 <div id="standardFields">
     <input id="amount" placeholder="المبلغ" oninput="convertNumber(this)">
 </div>
-
 <div id="transferFields" style="display:none">
     <select id="mobileSelect" onchange="showName()"></select>
     <input id="nameField" placeholder="الاسم" readonly>
 </div>
-
 <div id="visaFields" style="display:none">
     <input id="batchNum" placeholder="رقم الباتش *">
     <input id="calcField" placeholder="الحسبة (مثال: 10+20)" oninput="handleVisaCalc(this)">
@@ -187,15 +185,26 @@ button{padding:8px 15px;border:none;border-radius:6px;cursor:pointer;font-weight
         <input id="visaCount" placeholder="العدد" readonly style="background:#eee">
     </div>
 </div>
-
 <div id="noteFields" style="display:none">
     <input id="note" placeholder="البيان / الترحيلة">
     <input id="user" placeholder="المسؤول">
 </div>
-
 <div class="btn-group">
     <button class="add" onclick="savePopup()">حفظ</button>
     <button style="background:#95a5a6; color:#fff;" onclick="closePopup()">إلغاء</button>
+</div>
+</div>
+</div>
+
+<!-- نافذة النجاح بعد الحفظ -->
+<div class="popup" id="successPopup">
+<div class="box">
+<div class="success-icon">✅</div>
+<h3 id="successMsg">تم الحفظ بنجاح</h3>
+<p id="successDrawer"></p>
+<div class="btn-group" style="flex-direction: column;">
+    <a href="https://hr-directions.github.io/Shift-review-/" target="_blank" class="report-btn" style="width: 100%;">📋 عرض تقرير اليوم</a>
+    <button style="background:#2c3e50; color:#fff; width: 100%; margin-top: 10px;" onclick="location.reload()">تسجيل جديد</button>
 </div>
 </div>
 </div>
@@ -262,10 +271,7 @@ window.convertNumber=function(el){
 }
 
 dateInput.addEventListener("change",function(){
-    if(!this.value) {
-        dayInput.value = "";
-        return;
-    }
+    if(!this.value) { dayInput.value = ""; return; }
     let d=new Date(this.value);
     let days=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
     dayInput.value=days[d.getDay()];
@@ -354,28 +360,23 @@ window.savePopup=function(){
         let b = document.getElementById("batchNum").value.trim();
         let a = parseFloat(document.getElementById("visaAmount").value) || 0;
         let c = parseInt(document.getElementById("visaCount").value) || 0;
-        
         if(!b) { alert("رقم الباتش مطلوب وإجباري"); return; }
         if(a <= 0) { alert("يرجى إدخال الحسبة بشكل صحيح"); return; }
-        
         visaArr.push({batch: b, amount: a, count: c});
         renderVisa();
     } else {
         let a = +amount.value || 0;
         if(mode=="insta"){
             if(!mobileSelect.value){alert("برجاء اختيار رقم الحساب"); return;}
-            instaArr.push({amount:a,mobile:mobileSelect.value,name:nameField.value}); 
-            renderInsta();
+            instaArr.push({amount:a,mobile:mobileSelect.value,name:nameField.value}); renderInsta();
         }
         if(mode=="wallet"){
             if(!mobileSelect.value){alert("برجاء اختيار رقم الحساب"); return;}
-            walletArr.push({amount:a,mobile:mobileSelect.value,name:nameField.value}); 
-            renderWallet();
+            walletArr.push({amount:a,mobile:mobileSelect.value,name:nameField.value}); renderWallet();
         }
         if(mode=="purchase"){purchases.push({amount:a,note:note.value,user:user.value}); renderPurchases();}
         if(mode=="expense"){expenses.push({amount:a,note:note.value,user:user.value}); renderExpenses();}
     }
-    
     amount.value=note.value=user.value="";
     document.getElementById("batchNum").value="";
     document.getElementById("calcField").value="";
@@ -388,9 +389,7 @@ function renderInsta(){
     let t=0; instaTable.innerHTML=""; 
     instaArr.forEach((i,idx)=>{ 
         t+=i.amount; 
-        let row=document.createElement("tr"); 
-        row.innerHTML=`<td>${i.amount}</td><td>${i.mobile}</td><td>${i.name}</td><td><span class="removeBtn" onclick="removeRow('insta',${idx})">-</span></td>`; 
-        instaTable.appendChild(row);
+        instaTable.innerHTML+=`<tr><td>${i.amount}</td><td>${i.mobile}</td><td>${i.name}</td><td><span class="removeBtn" onclick="removeRow('insta',${idx})">-</span></td></tr>`; 
     }); 
     instaTotal.value=t; calc(); 
 }
@@ -399,9 +398,7 @@ function renderWallet(){
     let t=0; walletTable.innerHTML=""; 
     walletArr.forEach((i,idx)=>{ 
         t+=i.amount; 
-        let row=document.createElement("tr"); 
-        row.innerHTML=`<td>${i.amount}</td><td>${i.mobile}</td><td>${i.name}</td><td><span class="removeBtn" onclick="removeRow('wallet',${idx})">-</span></td>`; 
-        walletTable.appendChild(row);
+        walletTable.innerHTML+=`<tr><td>${i.amount}</td><td>${i.mobile}</td><td>${i.name}</td><td><span class="removeBtn" onclick="removeRow('wallet',${idx})">-</span></td></tr>`; 
     }); 
     walletTotal.value=t; calc(); 
 }
@@ -410,11 +407,8 @@ function renderVisa(){
     let totalAmt=0, totalCount=0; 
     visaTable.innerHTML=""; 
     visaArr.forEach((v,idx)=>{ 
-        totalAmt += v.amount; 
-        totalCount += v.count; 
-        let row=document.createElement("tr"); 
-        row.innerHTML=`<td>${v.batch}</td><td>${v.amount}</td><td>${v.count}</td><td><span class="removeBtn" onclick="removeRow('visa',${idx})">-</span></td>`; 
-        visaTable.appendChild(row);
+        totalAmt += v.amount; totalCount += v.count; 
+        visaTable.innerHTML+=`<tr><td>${v.batch}</td><td>${v.amount}</td><td>${v.count}</td><td><span class="removeBtn" onclick="removeRow('visa',${idx})">-</span></td></tr>`; 
     }); 
     visaTotal.value = totalAmt; 
     document.getElementById("visaSummary").innerText = `إجمالي الفيزا: ${totalAmt} | العمليات: ${totalCount} | الباتشات: ${visaArr.length}`;
@@ -448,19 +442,15 @@ window.removeRow = function(type, idx) {
 }
 
 function calc(){
-    total.value=(+cash.value||0)+(+instaTotal.value||0)+(+walletTotal.value||0);
+    total.value=((+cash.value||0)+(+instaTotal.value||0)+(+walletTotal.value||0)).toFixed(2);
     let diffVal = (+actual.value||0) - (+total.value||0);
     diff.value = diffVal.toFixed(2);
 }
 
 window.saveData=function(){
-    // فحص التاريخ (إجباري)
     if(!dateInput.value){ alert("الرجاء اختيار تاريخ اليوم أولاً"); return; }
-    // فحص رقم الدرج
     if(!drawer.value){ alert("الرجاء إدخال رقم الدرج"); return; }
-    // فحص النقدية (إجباري)
     if(!cash.value || cash.value === "") { alert("يجب إدخال قيمة النقدية (Cash)"); return; }
-    // فحص الفعلي (إجباري)
     if(!actual.value || actual.value === "") { alert("يجب إدخال القيمة الفعلية (Actual)"); return; }
 
     let treasuryNum=drawer.value;
@@ -486,8 +476,9 @@ window.saveData=function(){
 
     db.ref("treasury").push(data)
     .then(()=>{
-        alert("تم الحفظ بنجاح ✅ رقم الخزينة: "+treasuryNum);
-        location.reload(); 
+        // إظهار نافذة النجاح المخصصة
+        document.getElementById("successDrawer").innerText = "رقم الدرج: " + treasuryNum;
+        document.getElementById("successPopup").style.display = "flex";
     })
     .catch(err=>{ alert("حدث خطأ أثناء الحفظ"); console.error(err); });
 }

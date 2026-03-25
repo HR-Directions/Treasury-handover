@@ -24,7 +24,7 @@ button{padding:8px 15px;border:none;border-radius:6px;cursor:pointer;font-weight
 .box{background:#fff;padding:20px;width:320px;border-radius:10px;text-align:center;box-shadow: 0 4px 15px rgba(0,0,0,0.2);}
 .box input {margin-bottom: 10px;}
 .removeBtn{background:#e74c3c;color:#fff;padding:2px 6px;border-radius:4px;cursor:pointer;font-size:12px;}
-.footer-summary {font-size: 13px; background: #f9f9f9; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-top: 5px;}
+.footer-summary {font-size: 13px; background: #f9f9f9; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-top: 5px; font-weight: bold; color: #2c3e50;}
 .btn-group {display:flex; gap:10px; margin-top:15px;}
 .success-icon {font-size: 40px; color: #27ae60; margin-bottom: 10px;}
 @media(max-width:800px){.flex{flex-direction:column;}}
@@ -109,6 +109,9 @@ button{padding:8px 15px;border:none;border-radius:6px;cursor:pointer;font-weight
 <thead><tr><th>المبلغ</th><th>الرقم</th><th>الاسم</th><th>-</th></tr></thead>
 <tbody id="instaTable"></tbody>
 </table>
+<div class="footer-summary" id="instaSummary">
+إجمالي انستا: 0 | العمليات: 0
+</div>
 </div>
 
 <div class="card">
@@ -117,6 +120,9 @@ button{padding:8px 15px;border:none;border-radius:6px;cursor:pointer;font-weight
 <thead><tr><th>المبلغ</th><th>الرقم</th><th>الاسم</th><th>-</th></tr></thead>
 <tbody id="walletTable"></tbody>
 </table>
+<div class="footer-summary" id="walletSummary">
+إجمالي المحفظة: 0 | العمليات: 0
+</div>
 </div>
 
 <div class="card">
@@ -391,7 +397,9 @@ function renderInsta(){
         t+=i.amount; 
         instaTable.innerHTML+=`<tr><td>${i.amount}</td><td>${i.mobile}</td><td>${i.name}</td><td><span class="removeBtn" onclick="removeRow('insta',${idx})">-</span></td></tr>`; 
     }); 
-    instaTotal.value=t; calc(); 
+    instaTotal.value=t; 
+    document.getElementById("instaSummary").innerText = `إجمالي انستا: ${t.toFixed(2)} | العمليات: ${instaArr.length}`;
+    calc(); 
 }
 
 function renderWallet(){ 
@@ -400,7 +408,9 @@ function renderWallet(){
         t+=i.amount; 
         walletTable.innerHTML+=`<tr><td>${i.amount}</td><td>${i.mobile}</td><td>${i.name}</td><td><span class="removeBtn" onclick="removeRow('wallet',${idx})">-</span></td></tr>`; 
     }); 
-    walletTotal.value=t; calc(); 
+    walletTotal.value=t; 
+    document.getElementById("walletSummary").innerText = `إجمالي المحفظة: ${t.toFixed(2)} | العمليات: ${walletArr.length}`;
+    calc(); 
 }
 
 function renderVisa(){ 
@@ -442,8 +452,8 @@ window.removeRow = function(type, idx) {
 }
 
 function calc(){
-    total.value=((+cash.value||0)+(+instaTotal.value||0)+(+walletTotal.value||0)).toFixed(2);
-    let diffVal = (-actual.value||0) - (-total.value||0);
+    total.value=((+cash.value||0)+(+instaTotal.value||0)+(+walletTotal.value||0)+(+visaTotal.value||0)).toFixed(2);
+    let diffVal = (+actual.value||0) - (+total.value||0);
     diff.value = diffVal.toFixed(2);
 }
 
@@ -476,7 +486,6 @@ window.saveData=function(){
 
     db.ref("treasury").push(data)
     .then(()=>{
-        // إظهار نافذة النجاح المخصصة
         document.getElementById("successDrawer").innerText = "رقم الدرج: " + treasuryNum;
         document.getElementById("successPopup").style.display = "flex";
     })

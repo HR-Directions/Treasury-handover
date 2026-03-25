@@ -52,10 +52,10 @@ button{padding:8px 15px;border:none;border-radius:6px;cursor:pointer;font-weight
 <table>
 <tr>
 <td>الفرع <select id="branch"></select></td>
-<td>التاريخ <input type="date" id="date"></td>
+<td>التاريخ <span style="color:red">*</span> <input type="date" id="date"></td>
 </tr>
 <tr>
-<td>اليوم <input id="day" readonly></td>
+<td>اليوم <input id="day" readonly placeholder="سيظهر تلقائياً"></td>
 <td>رقم الدرج <input id="drawer"></td>
 </tr>
 </table>
@@ -262,6 +262,10 @@ window.convertNumber=function(el){
 }
 
 dateInput.addEventListener("change",function(){
+    if(!this.value) {
+        dayInput.value = "";
+        return;
+    }
     let d=new Date(this.value);
     let days=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
     dayInput.value=days[d.getDay()];
@@ -450,8 +454,13 @@ function calc(){
 }
 
 window.saveData=function(){
+    // فحص التاريخ (إجباري)
+    if(!dateInput.value){ alert("الرجاء اختيار تاريخ اليوم أولاً"); return; }
+    // فحص رقم الدرج
     if(!drawer.value){ alert("الرجاء إدخال رقم الدرج"); return; }
+    // فحص النقدية (إجباري)
     if(!cash.value || cash.value === "") { alert("يجب إدخال قيمة النقدية (Cash)"); return; }
+    // فحص الفعلي (إجباري)
     if(!actual.value || actual.value === "") { alert("يجب إدخال القيمة الفعلية (Actual)"); return; }
 
     let treasuryNum=drawer.value;

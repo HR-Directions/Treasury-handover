@@ -452,7 +452,7 @@ window.removeRow = function(type, idx) {
 }
 
 function calc(){
-    total.value=((+cash.value||0)+(+instaTotal.value||0)+(+walletTotal.value||0)).toFixed(2);
+    total.value=((+cash.value||0)-(+instaTotal.value||0)-(+walletTotal.value||0)).toFixed(2);
     let diffVal = (-actual.value||0) - (-total.value||0);
     diff.value = diffVal.toFixed(2);
 }

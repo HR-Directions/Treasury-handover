@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -23,7 +24,7 @@ button{padding:8px 15px;border:none;border-radius:6px;cursor:pointer;font-weight
 .flex > div{flex:1;min-width:300px;}
 .popup{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;justify-content:center;align-items:center;z-index:100;}
 .box{background:#fff;padding:20px;width:320px;border-radius:10px;text-align:center;box-shadow: 0 4px 15px rgba(0,0,0,0.2);}
-.box input {margin-bottom: 10px;}
+.box input, .box select {margin-bottom: 10px;}
 .removeBtn{background:#e74c3c;color:#fff;padding:2px 6px;border-radius:4px;cursor:pointer;font-size:12px;}
 .view-btn{background:#34495e;color:#fff;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:11px;}
 .footer-summary {font-size: 13px; background: #f9f9f9; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-top: 5px; font-weight: bold; color: #2c3e50;}
@@ -183,7 +184,7 @@ button{padding:8px 15px;border:none;border-radius:6px;cursor:pointer;font-weight
 </tr>
 </table>
 <div class="btn-group">
-    <button class="save" onclick="saveData()">💾 حفظ البيانات</button>
+    <button id="saveDataBtn" class="save" onclick="saveData()">💾 حفظ البيانات</button>
     <a href="https://hr-directions.github.io/Shift-review-/" target="_blank" class="report-btn">📋 تقرير اليوم</a>
 </div>
 </div>
@@ -210,7 +211,10 @@ button{padding:8px 15px;border:none;border-radius:6px;cursor:pointer;font-weight
 </div>
 <div id="noteFields" style="display:none">
     <input id="note" placeholder="البيان / الترحيلة">
-    <input id="user" placeholder="المسؤول">
+    <!-- تم تغيير خانة المسؤول إلى قائمة منسدلة -->
+    <select id="user">
+        <option value="">اختر المسؤول</option>
+    </select>
 </div>
 <div class="btn-group">
     <button class="add" onclick="savePopup()">حفظ</button>
@@ -255,6 +259,7 @@ let currentSavedData = null;
 let loginBtn=document.getElementById("loginBtn"), loginCode=document.getElementById("loginCode"), loginPassword=document.getElementById("loginPassword"), loginError=document.getElementById("loginError"), loginPopup=document.getElementById("loginPopup"), mainContainer=document.getElementById("mainContainer"), branchSelect=document.getElementById("branch");
 let dateInput=document.getElementById("date"), dayInput=document.getElementById("day"), cash=document.getElementById("cash"), instaTotal=document.getElementById("instaTotal"), walletTotal=document.getElementById("walletTotal"), visaTotal=document.getElementById("visaTotal"), total=document.getElementById("total"), actual=document.getElementById("actual"), diff=document.getElementById("diff");
 let instaTable=document.getElementById("instaTable"), walletTable=document.getElementById("walletTable"), visaTable=document.getElementById("visaTable"), purchaseTable=document.getElementById("purchaseTable"), expenseTable=document.getElementById("expenseTable"), pTotal=document.getElementById("pTotal"), eTotal=document.getElementById("eTotal"), drawerManager=document.getElementById("drawerManager"), reviewer=document.getElementById("reviewer");
+let userSelect = document.getElementById("user");
 
 let transfers=[], employees=[], instaArr=[], walletArr=[], visaArr=[], purchases=[], expenses=[], mode="";
 
@@ -304,8 +309,11 @@ function initTreasury(bk){
 
 function filterEmployees(bk){
     drawerManager.innerHTML=""; reviewer.innerHTML="";
+    userSelect.innerHTML="<option value=''>اختر المسؤول</option>"; // تهيئة قائمة المسؤول في المشتريات/المصروفات
     employees.filter(e=>e.branch==bk).forEach(emp=>{
-        drawerManager.innerHTML+=`<option>${emp.name}</option>`; reviewer.innerHTML+=`<option>${emp.name}</option>`;
+        drawerManager.innerHTML+=`<option value="${emp.name}">${emp.name}</option>`; 
+        reviewer.innerHTML+=`<option value="${emp.name}">${emp.name}</option>`;
+        userSelect.innerHTML+=`<option value="${emp.name}">${emp.name}</option>`; // إضافة الموظف للقائمة المنسدلة
     });
 }
 
@@ -336,10 +344,18 @@ window.savePopup=function(){
         let a = +document.getElementById("amount").value || 0, n = document.getElementById("note").value, u = document.getElementById("user").value, ms = document.getElementById("mobileSelect").value, nf = document.getElementById("nameField").value;
         if(mode=="insta"){ if(!ms)return; instaArr.push({amount:a,mobile:ms,name:nf}); renderInsta(); }
         else if(mode=="wallet"){ if(!ms)return; walletArr.push({amount:a,mobile:ms,name:nf}); renderWallet(); }
-        else if(mode=="purchase"){ purchases.push({amount:a,note:n,user:u}); renderPurchases(); }
-        else if(mode=="expense"){ expenses.push({amount:a,note:n,user:u}); renderExpenses(); }
+        else if(mode=="purchase"){ 
+            if(!u) { alert("الرجاء اختيار المسؤول!"); return; } // تحقق من اختيار المسؤول
+            purchases.push({amount:a,note:n,user:u}); renderPurchases(); 
+        }
+        else if(mode=="expense"){ 
+            if(!u) { alert("الرجاء اختيار المسؤول!"); return; } // تحقق من اختيار المسؤول
+            expenses.push({amount:a,note:n,user:u}); renderExpenses(); 
+        }
     }
-    document.getElementById("amount").value=document.getElementById("note").value=document.getElementById("user").value=document.getElementById("batchNum").value=document.getElementById("calcField").value=document.getElementById("visaAmount").value=document.getElementById("visaCount").value="";
+    // مسح الحقول بعد الإضافة
+    document.getElementById("amount").value=document.getElementById("note").value=document.getElementById("batchNum").value=document.getElementById("calcField").value=document.getElementById("visaAmount").value=document.getElementById("visaCount").value="";
+    document.getElementById("user").value = ""; // إرجاع القائمة للمتخلف
     closePopup();
 }
 
@@ -399,9 +415,48 @@ function calc(){
 }
 
 window.saveData=function(){
-    if(!dateInput.value||!drawer.value||!cash.value||!actual.value){ alert("برجاء إكمال البيانات الإجبارية"); return; }
-    let data={ branchKey:branchSelect.value, branchName:branchSelect.options[0].text, drawerManager:drawerManager.value, reviewer:reviewer.value, date:dateInput.value, day:dayInput.value, drawer:drawer.value, cash:+cash.value||0, insta:instaArr, wallet:walletArr, visa:visaArr, purchases, expenses, total:total.value, actual:actual.value, diff:diff.value, timestamp: new Date().getTime() };
-    db.ref("treasury").push(data).then(()=>{ currentSavedData = data; document.getElementById("successDrawer").innerText = "رقم الدرج: " + drawer.value; document.getElementById("successPopup").style.display = "flex"; });
+    let drawerVal = document.getElementById("drawer").value;
+    if(!dateInput.value||!drawerVal||!cash.value||!actual.value){ alert("برجاء إكمال البيانات الإجبارية"); return; }
+    
+    let saveBtn = document.getElementById("saveDataBtn");
+    let originalText = saveBtn.innerText;
+    saveBtn.innerText = "⏳ جاري التحقق...";
+    saveBtn.disabled = true;
+
+    // التحقق من عدم تكرار رقم الدرج لنفس اليوم والفرع
+    db.ref("treasury").orderByChild("date").equalTo(dateInput.value).once("value")
+    .then(snapshot => {
+        let exists = false;
+        snapshot.forEach(child => {
+            let record = child.val();
+            if(record.branchKey === branchSelect.value && record.drawer === drawerVal) {
+                exists = true;
+            }
+        });
+
+        if(exists) {
+            alert("⚠️ تنبيه: رقم الدرج (" + drawerVal + ") تم تسجيله مسبقاً في هذا التاريخ لنفس الفرع! لا يمكن الحفظ مرتين.");
+            saveBtn.innerText = originalText;
+            saveBtn.disabled = false;
+            return;
+        }
+
+        // إذا لم يكن مكرراً، أكمل الحفظ
+        let data={ branchKey:branchSelect.value, branchName:branchSelect.options[0].text, drawerManager:drawerManager.value, reviewer:reviewer.value, date:dateInput.value, day:dayInput.value, drawer:drawerVal, cash:+cash.value||0, insta:instaArr, wallet:walletArr, visa:visaArr, purchases, expenses, total:total.value, actual:actual.value, diff:diff.value, timestamp: new Date().getTime() };
+        
+        return db.ref("treasury").push(data).then(()=>{ 
+            currentSavedData = data; 
+            document.getElementById("successDrawer").innerText = "رقم الدرج: " + drawerVal; 
+            document.getElementById("successPopup").style.display = "flex"; 
+            saveBtn.innerText = originalText;
+            saveBtn.disabled = false;
+        });
+    })
+    .catch(error => {
+        alert("حدث خطأ أثناء الاتصال بقاعدة البيانات: " + error.message);
+        saveBtn.innerText = originalText;
+        saveBtn.disabled = false;
+    });
 }
 
 function sum(arr) { return !arr ? 0 : arr.reduce((a, b) => a + (parseFloat(b.amount) || 0), 0); }

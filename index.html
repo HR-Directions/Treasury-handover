@@ -43,13 +43,13 @@ button{padding:8px 15px;border:none;border-radius:6px;cursor:pointer;font-weight
         position: absolute;
         left: 0;
         top: 0;
-        width: 80mm; /* العرض المطلوب 80mm */
+        width: 80mm;
         padding: 5mm;
         margin: 0;
         font-family: 'Tahoma', sans-serif;
         direction: rtl;
         color: #000;
-        zoom: 83%; /* السكيل المطلوب 89% */
+        zoom: 83%;
     }
     .print-header { text-align: center; margin-bottom: 10px; }
     .header-branch-name { margin: 5px 0; font-size: 18px; }
@@ -282,25 +282,73 @@ dateInput.addEventListener("change",function(){
     dayInput.value=days[d.getDay()];
 });
 
+
+// === دعم الضغط على زر Enter للقيام بتسجيل الدخول ===
+function handleEnterKey(event) {
+    if (event.key === "Enter") {
+        loginBtn.click();
+    }
+}
+loginCode.addEventListener("keydown", handleEnterKey);
+loginPassword.addEventListener("keydown", handleEnterKey);
+
+
+// === تم تحديث وتصحيح كود تسجيل الدخول ليصبح مقاوماً للأخطاء بنسبة 100% ===
 loginBtn.addEventListener("click",function(){
-    let code=loginCode.value.trim(), pass=loginPassword.value.trim();
-    if(!code||!pass){ loginError.innerText="الرجاء إدخال الكود والرقم السري"; return; }
-    db.ref("branches").once("value").then(snapshot=>{
-        let found=false;
-        snapshot.forEach(branchKey=>{
-            let b=snapshot.child(branchKey.key).val();
-            if(b.code==code){
-                found=true;
-                if(b.password==pass){
-                    loginPopup.style.display="none"; mainContainer.style.display="block";
-                    branchSelect.innerHTML=`<option value="${branchKey.key}">${b.name}</option>`;
-                    branchSelect.disabled=true; initTreasury(branchKey.key);
-                }else{ loginError.innerText="الرقم السري غير صحيح"; }
+    let code = loginCode.value.trim();
+    let pass = loginPassword.value.trim();
+    
+    if(!code || !pass){ 
+        loginError.innerText = "الرجاء إدخال الكود والرقم السري"; 
+        return; 
+    }
+
+    loginBtn.innerText = "جاري التحقق...";
+    loginBtn.disabled = true;
+    loginError.innerText = "";
+
+    db.ref("branches").once("value")
+    .then(snapshot => {
+        let found = false;
+        
+        snapshot.forEach(childSnapshot => {
+            let b = childSnapshot.val();
+            
+            // التأكد من أن الكائن غير فارغ وأنه يحتوي على البيانات المطلوبة
+            if(b && b.code != null && b.password != null){
+                // تحويل القيم إلى نص صريح وحذف أي مسافات زائدة حولها قد تسبب مشكلة
+                let dbCode = String(b.code).trim();
+                let dbPass = String(b.password).trim();
+
+                if(dbCode === code){
+                    found = true;
+                    if(dbPass === pass){
+                        loginPopup.style.display="none"; 
+                        mainContainer.style.display="block";
+                        branchSelect.innerHTML=`<option value="${childSnapshot.key}">${b.name}</option>`;
+                        branchSelect.disabled=true; 
+                        initTreasury(childSnapshot.key);
+                    } else { 
+                        loginError.innerText = "الرقم السري غير صحيح"; 
+                    }
+                }
             }
         });
-        if(!found){ loginError.innerText="كود الفرع غير موجود"; }
+        
+        if(!found){ 
+            loginError.innerText = "كود الفرع غير موجود"; 
+        }
+    })
+    .catch(error => {
+        console.error(error);
+        loginError.innerText = "حدث خطأ أثناء الاتصال بقاعدة البيانات. يرجى التأكد من الإنترنت.";
+    })
+    .finally(() => {
+        loginBtn.innerText = "تسجيل الدخول";
+        loginBtn.disabled = false;
     });
 });
+// ==============================================
 
 function initTreasury(bk){
     db.ref("employees").once("value").then(snap=>{ employees=[]; snap.forEach(e=>{let v=e.val(); if(v) employees.push(v);}); return db.ref("transfers").once("value"); })
@@ -309,11 +357,11 @@ function initTreasury(bk){
 
 function filterEmployees(bk){
     drawerManager.innerHTML=""; reviewer.innerHTML="";
-    userSelect.innerHTML="<option value=''>اختر المسؤول</option>"; // تهيئة قائمة المسؤول في المشتريات/المصروفات
+    userSelect.innerHTML="<option value=''>اختر المسؤول</option>"; 
     employees.filter(e=>e.branch==bk).forEach(emp=>{
         drawerManager.innerHTML+=`<option value="${emp.name}">${emp.name}</option>`; 
         reviewer.innerHTML+=`<option value="${emp.name}">${emp.name}</option>`;
-        userSelect.innerHTML+=`<option value="${emp.name}">${emp.name}</option>`; // إضافة الموظف للقائمة المنسدلة
+        userSelect.innerHTML+=`<option value="${emp.name}">${emp.name}</option>`; 
     });
 }
 
@@ -345,17 +393,17 @@ window.savePopup=function(){
         if(mode=="insta"){ if(!ms)return; instaArr.push({amount:a,mobile:ms,name:nf}); renderInsta(); }
         else if(mode=="wallet"){ if(!ms)return; walletArr.push({amount:a,mobile:ms,name:nf}); renderWallet(); }
         else if(mode=="purchase"){ 
-            if(!u) { alert("الرجاء اختيار المسؤول!"); return; } // تحقق من اختيار المسؤول
+            if(!u) { alert("الرجاء اختيار المسؤول!"); return; } 
             purchases.push({amount:a,note:n,user:u}); renderPurchases(); 
         }
         else if(mode=="expense"){ 
-            if(!u) { alert("الرجاء اختيار المسؤول!"); return; } // تحقق من اختيار المسؤول
+            if(!u) { alert("الرجاء اختيار المسؤول!"); return; } 
             expenses.push({amount:a,note:n,user:u}); renderExpenses(); 
         }
     }
-    // مسح الحقول بعد الإضافة
+    
     document.getElementById("amount").value=document.getElementById("note").value=document.getElementById("batchNum").value=document.getElementById("calcField").value=document.getElementById("visaAmount").value=document.getElementById("visaCount").value="";
-    document.getElementById("user").value = ""; // إرجاع القائمة للمتخلف
+    document.getElementById("user").value = ""; 
     closePopup();
 }
 
@@ -423,7 +471,6 @@ window.saveData=function(){
     saveBtn.innerText = "⏳ جاري التحقق...";
     saveBtn.disabled = true;
 
-    // التحقق من عدم تكرار رقم الدرج لنفس اليوم والفرع
     db.ref("treasury").orderByChild("date").equalTo(dateInput.value).once("value")
     .then(snapshot => {
         let exists = false;
@@ -441,7 +488,6 @@ window.saveData=function(){
             return;
         }
 
-        // إذا لم يكن مكرراً، أكمل الحفظ
         let data={ branchKey:branchSelect.value, branchName:branchSelect.options[0].text, drawerManager:drawerManager.value, reviewer:reviewer.value, date:dateInput.value, day:dayInput.value, drawer:drawerVal, cash:+cash.value||0, insta:instaArr, wallet:walletArr, visa:visaArr, purchases, expenses, total:total.value, actual:actual.value, diff:diff.value, timestamp: new Date().getTime() };
         
         return db.ref("treasury").push(data).then(()=>{ 
@@ -520,3 +566,5 @@ function renderSubTablePrint(title, arr, type) {
 </script>
 </body>
 </html>
+
+

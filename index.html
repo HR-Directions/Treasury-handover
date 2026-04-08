@@ -18,7 +18,6 @@ button{padding:8px 15px;border:none;border-radius:6px;cursor:pointer;font-weight
 .add{background:#27ae60;color:#fff;}
 .save{background:#2980b9;color:#fff;flex:2;}
 .print-btn{background:#8e44ad;color:#fff;width:100%;margin-top:10px;cursor:pointer;}
-.report-btn{background:#e67e22;color:#fff;text-decoration:none;display:inline-block;padding:8px 15px;border-radius:6px;flex:1;text-align:center;}
 .total{background:#f1f1f1;font-weight:bold}
 .flex{display:flex;gap:15px;flex-wrap:wrap;}
 .flex > div{flex:1;min-width:300px;}
@@ -31,25 +30,13 @@ button{padding:8px 15px;border:none;border-radius:6px;cursor:pointer;font-weight
 .btn-group {display:flex; gap:10px; margin-top:15px;}
 .success-icon {font-size: 40px; color: #27ae60; margin-bottom: 10px;}
 
-/* إعدادات الطباعة المعدلة حسب الطلب */
 @media print {
-    @page {
-        size: 100mm 148mm;
-        margin: 0;
-    }
+    @page { size: 100mm 148mm; margin: 0; }
     body * { visibility: hidden; }
     #thermalArea, #thermalArea * { visibility: visible; }
     #thermalArea {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 80mm;
-        padding: 5mm;
-        margin: 0;
-        font-family: 'Tahoma', sans-serif;
-        direction: rtl;
-        color: #000;
-        zoom: 83%;
+        position: absolute; left: 0; top: 0; width: 80mm; padding: 5mm; margin: 0;
+        font-family: 'Tahoma', sans-serif; direction: rtl; color: #000; zoom: 83%;
     }
     .print-header { text-align: center; margin-bottom: 10px; }
     .header-branch-name { margin: 5px 0; font-size: 18px; }
@@ -62,7 +49,6 @@ button{padding:8px 15px;border:none;border-radius:6px;cursor:pointer;font-weight
 </head>
 <body>
 
-<!-- منطقة الطباعة -->
 <div id="thermalArea" style="display:none;"></div>
 
 <!-- تسجيل الدخول -->
@@ -78,7 +64,6 @@ button{padding:8px 15px;border:none;border-radius:6px;cursor:pointer;font-weight
 </div>
 
 <div class="container" id="mainContainer">
-
 <h3>🧾 تسجيل الدرج</h3>
 
 <div class="card">
@@ -141,7 +126,6 @@ button{padding:8px 15px;border:none;border-radius:6px;cursor:pointer;font-weight
 </table>
 <div class="footer-summary" id="instaSummary">إجمالي انستا: 0 | العمليات: 0</div>
 </div>
-
 <div class="card">
 <h4>محفظة</h4>
 <table>
@@ -150,7 +134,6 @@ button{padding:8px 15px;border:none;border-radius:6px;cursor:pointer;font-weight
 </table>
 <div class="footer-summary" id="walletSummary">إجمالي المحفظة: 0 | العمليات: 0</div>
 </div>
-
 <div class="card">
 <h4>فيزا</h4>
 <table>
@@ -184,8 +167,8 @@ button{padding:8px 15px;border:none;border-radius:6px;cursor:pointer;font-weight
 </tr>
 </table>
 <div class="btn-group">
-    <button id="saveDataBtn" class="save" onclick="saveData()">💾 حفظ البيانات</button>
-    <a href="https://hr-directions.github.io/Shift-review-/" target="_blank" class="report-btn">📋 تقرير اليوم</a>
+    <!-- تم إزالة زر التقارير هنا والاكتفاء بزر الحفظ فقط -->
+    <button id="saveDataBtn" class="save" style="width: 100%;" onclick="saveData()">💾 حفظ البيانات</button>
 </div>
 </div>
 </div>
@@ -211,10 +194,7 @@ button{padding:8px 15px;border:none;border-radius:6px;cursor:pointer;font-weight
 </div>
 <div id="noteFields" style="display:none">
     <input id="note" placeholder="البيان / الترحيلة">
-    <!-- تم تغيير خانة المسؤول إلى قائمة منسدلة -->
-    <select id="user">
-        <option value="">اختر المسؤول</option>
-    </select>
+    <select id="user"><option value="">اختر المسؤول</option></select>
 </div>
 <div class="btn-group">
     <button class="add" onclick="savePopup()">حفظ</button>
@@ -223,7 +203,7 @@ button{padding:8px 15px;border:none;border-radius:6px;cursor:pointer;font-weight
 </div>
 </div>
 
-<!-- Popup عرض التفاصيل (الحسبة) -->
+<!-- Popup عرض التفاصيل -->
 <div class="popup" id="viewCalcPopup">
 <div class="box">
     <h3>تفاصيل الحسبة</h3>
@@ -249,17 +229,14 @@ button{padding:8px 15px;border:none;border-radius:6px;cursor:pointer;font-weight
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function(){
-
 const firebaseConfig={databaseURL:"https://sample-firebase-ai-app-e4260-default-rtdb.firebaseio.com/"};
 firebase.initializeApp(firebaseConfig);
 const db=firebase.database();
 
 let currentSavedData = null;
-
 let loginBtn=document.getElementById("loginBtn"), loginCode=document.getElementById("loginCode"), loginPassword=document.getElementById("loginPassword"), loginError=document.getElementById("loginError"), loginPopup=document.getElementById("loginPopup"), mainContainer=document.getElementById("mainContainer"), branchSelect=document.getElementById("branch");
 let dateInput=document.getElementById("date"), dayInput=document.getElementById("day"), cash=document.getElementById("cash"), instaTotal=document.getElementById("instaTotal"), walletTotal=document.getElementById("walletTotal"), visaTotal=document.getElementById("visaTotal"), total=document.getElementById("total"), actual=document.getElementById("actual"), diff=document.getElementById("diff");
-let instaTable=document.getElementById("instaTable"), walletTable=document.getElementById("walletTable"), visaTable=document.getElementById("visaTable"), purchaseTable=document.getElementById("purchaseTable"), expenseTable=document.getElementById("expenseTable"), pTotal=document.getElementById("pTotal"), eTotal=document.getElementById("eTotal"), drawerManager=document.getElementById("drawerManager"), reviewer=document.getElementById("reviewer");
-let userSelect = document.getElementById("user");
+let instaTable=document.getElementById("instaTable"), walletTable=document.getElementById("walletTable"), visaTable=document.getElementById("visaTable"), purchaseTable=document.getElementById("purchaseTable"), expenseTable=document.getElementById("expenseTable"), pTotal=document.getElementById("pTotal"), eTotal=document.getElementById("eTotal"), drawerManager=document.getElementById("drawerManager"), reviewer=document.getElementById("reviewer"), userSelect = document.getElementById("user");
 
 let transfers=[], employees=[], instaArr=[], walletArr=[], visaArr=[], purchases=[], expenses=[], mode="";
 
@@ -282,44 +259,27 @@ dateInput.addEventListener("change",function(){
     dayInput.value=days[d.getDay()];
 });
 
-
-// === دعم الضغط على زر Enter للقيام بتسجيل الدخول ===
-function handleEnterKey(event) {
-    if (event.key === "Enter") {
-        loginBtn.click();
-    }
-}
+// ميزة الدخول بزر Enter
+function handleEnterKey(event) { if (event.key === "Enter") { loginBtn.click(); } }
 loginCode.addEventListener("keydown", handleEnterKey);
 loginPassword.addEventListener("keydown", handleEnterKey);
 
-
-// === تم تحديث وتصحيح كود تسجيل الدخول ليصبح مقاوماً للأخطاء بنسبة 100% ===
+// معالجة تسجيل الدخول الصارمة
 loginBtn.addEventListener("click",function(){
     let code = loginCode.value.trim();
     let pass = loginPassword.value.trim();
-    
-    if(!code || !pass){ 
-        loginError.innerText = "الرجاء إدخال الكود والرقم السري"; 
-        return; 
-    }
-
+    if(!code || !pass){ loginError.innerText = "الرجاء إدخال الكود والرقم السري"; return; }
     loginBtn.innerText = "جاري التحقق...";
     loginBtn.disabled = true;
     loginError.innerText = "";
 
-    db.ref("branches").once("value")
-    .then(snapshot => {
+    db.ref("branches").once("value").then(snapshot => {
         let found = false;
-        
         snapshot.forEach(childSnapshot => {
             let b = childSnapshot.val();
-            
-            // التأكد من أن الكائن غير فارغ وأنه يحتوي على البيانات المطلوبة
             if(b && b.code != null && b.password != null){
-                // تحويل القيم إلى نص صريح وحذف أي مسافات زائدة حولها قد تسبب مشكلة
                 let dbCode = String(b.code).trim();
                 let dbPass = String(b.password).trim();
-
                 if(dbCode === code){
                     found = true;
                     if(dbPass === pass){
@@ -328,27 +288,17 @@ loginBtn.addEventListener("click",function(){
                         branchSelect.innerHTML=`<option value="${childSnapshot.key}">${b.name}</option>`;
                         branchSelect.disabled=true; 
                         initTreasury(childSnapshot.key);
-                    } else { 
-                        loginError.innerText = "الرقم السري غير صحيح"; 
-                    }
+                    } else { loginError.innerText = "الرقم السري غير صحيح"; }
                 }
             }
         });
-        
-        if(!found){ 
-            loginError.innerText = "كود الفرع غير موجود"; 
-        }
-    })
-    .catch(error => {
-        console.error(error);
-        loginError.innerText = "حدث خطأ أثناء الاتصال بقاعدة البيانات. يرجى التأكد من الإنترنت.";
-    })
-    .finally(() => {
-        loginBtn.innerText = "تسجيل الدخول";
-        loginBtn.disabled = false;
+        if(!found){ loginError.innerText = "كود الفرع غير موجود"; }
+    }).catch(e => {
+        loginError.innerText = "خطأ في الاتصال بقاعدة البيانات";
+    }).finally(() => {
+        loginBtn.innerText = "تسجيل الدخول"; loginBtn.disabled = false;
     });
 });
-// ==============================================
 
 function initTreasury(bk){
     db.ref("employees").once("value").then(snap=>{ employees=[]; snap.forEach(e=>{let v=e.val(); if(v) employees.push(v);}); return db.ref("transfers").once("value"); })
@@ -385,25 +335,16 @@ window.showName=function(){ let f=transfers.find(t=>t.mobile==document.getElemen
 window.savePopup=function(){
     if(mode=="visa") {
         let b = document.getElementById("batchNum").value.trim(), a = parseFloat(document.getElementById("visaAmount").value) || 0, c = parseInt(document.getElementById("visaCount").value) || 0, cd = document.getElementById("calcField").value.trim();
-        if(!b) { alert("رقم الباتش مطلوب"); return; }
-        if(a <= 0) { alert("يرجى إدخال الحسبة"); return; }
+        if(!b || a <= 0) { alert("بيانات غير مكتملة"); return; }
         visaArr.push({batch: b, amount: a, count: c, calcDetails: cd}); renderVisa();
     } else {
         let a = +document.getElementById("amount").value || 0, n = document.getElementById("note").value, u = document.getElementById("user").value, ms = document.getElementById("mobileSelect").value, nf = document.getElementById("nameField").value;
         if(mode=="insta"){ if(!ms)return; instaArr.push({amount:a,mobile:ms,name:nf}); renderInsta(); }
         else if(mode=="wallet"){ if(!ms)return; walletArr.push({amount:a,mobile:ms,name:nf}); renderWallet(); }
-        else if(mode=="purchase"){ 
-            if(!u) { alert("الرجاء اختيار المسؤول!"); return; } 
-            purchases.push({amount:a,note:n,user:u}); renderPurchases(); 
-        }
-        else if(mode=="expense"){ 
-            if(!u) { alert("الرجاء اختيار المسؤول!"); return; } 
-            expenses.push({amount:a,note:n,user:u}); renderExpenses(); 
-        }
+        else if(mode=="purchase"){ if(!u)return; purchases.push({amount:a,note:n,user:u}); renderPurchases(); }
+        else if(mode=="expense"){ if(!u)return; expenses.push({amount:a,note:n,user:u}); renderExpenses(); }
     }
-    
-    document.getElementById("amount").value=document.getElementById("note").value=document.getElementById("batchNum").value=document.getElementById("calcField").value=document.getElementById("visaAmount").value=document.getElementById("visaCount").value="";
-    document.getElementById("user").value = ""; 
+    document.getElementById("amount").value=document.getElementById("note").value=document.getElementById("batchNum").value=document.getElementById("calcField").value=document.getElementById("visaAmount").value=document.getElementById("visaCount").value=document.getElementById("user").value="";
     closePopup();
 }
 
@@ -416,28 +357,15 @@ function renderWallet(){
     walletTotal.value=t.toFixed(2); document.getElementById("walletSummary").innerText = `إجمالي المحفظة: ${t.toFixed(2)} | العمليات: ${walletArr.length}`; calc(); 
 }
 function renderVisa(){ 
-    let totalAmt=0; let totalCount=0; visaTable.innerHTML=""; 
+    let totalAmt=0, totalCount=0; visaTable.innerHTML=""; 
     visaArr.forEach((v,idx)=>{ 
-        totalAmt += v.amount; 
-        totalCount += (v.count || 0);
-        visaTable.innerHTML+=`<tr>
-            <td>${v.batch}</td>
-            <td><button class="view-btn" onclick="viewCalc(${idx})">عرض التفاصيل</button></td>
-            <td>${v.count}</td>
-            <td>${v.amount}</td>
-            <td><span class="removeBtn" onclick="removeRow('visa',${idx})">-</span></td>
-        </tr>`; 
+        totalAmt += v.amount; totalCount += (v.count || 0);
+        visaTable.innerHTML+=`<tr><td>${v.batch}</td><td><button class="view-btn" onclick="viewCalc(${idx})">عرض</button></td><td>${v.count}</td><td>${v.amount}</td><td><span class="removeBtn" onclick="removeRow('visa',${idx})">-</span></td></tr>`; 
     }); 
-    visaTotal.value = totalAmt.toFixed(2); 
-    document.getElementById("visaSummary").innerText = `إجمالي الفيزا: ${totalAmt.toFixed(2)} | الباتشات: ${visaArr.length} | إجمالي العمليات: ${totalCount}`; 
-    calc(); 
+    visaTotal.value = totalAmt.toFixed(2); document.getElementById("visaSummary").innerText = `إجمالي الفيزا: ${totalAmt.toFixed(2)} | الباتشات: ${visaArr.length} | العمليات: ${totalCount}`; calc(); 
 }
 
-window.viewCalc = function(idx) {
-    let item = visaArr[idx];
-    document.getElementById("calcDisplayArea").innerText = item.calcDetails || "لا توجد تفاصيل";
-    document.getElementById("viewCalcPopup").style.display = "flex";
-}
+window.viewCalc = function(idx) { document.getElementById("calcDisplayArea").innerText = visaArr[idx].calcDetails || "لا توجد تفاصيل"; document.getElementById("viewCalcPopup").style.display = "flex"; }
 
 function renderPurchases(){ 
     let t=0; purchaseTable.innerHTML=""; purchases.forEach((p,idx)=>{ t+=p.amount; purchaseTable.innerHTML+=`<tr><td>${p.amount}</td><td>${p.note}</td><td>${p.user}</td><td><span class="removeBtn" onclick="removeRow('purchase',${idx})">-</span></td></tr>`; }); 
@@ -465,75 +393,40 @@ function calc(){
 window.saveData=function(){
     let drawerVal = document.getElementById("drawer").value;
     if(!dateInput.value||!drawerVal||!cash.value||!actual.value){ alert("برجاء إكمال البيانات الإجبارية"); return; }
-    
     let saveBtn = document.getElementById("saveDataBtn");
-    let originalText = saveBtn.innerText;
-    saveBtn.innerText = "⏳ جاري التحقق...";
-    saveBtn.disabled = true;
+    saveBtn.innerText = "⏳ جاري التحقق..."; saveBtn.disabled = true;
 
-    db.ref("treasury").orderByChild("date").equalTo(dateInput.value).once("value")
-    .then(snapshot => {
+    db.ref("treasury").orderByChild("date").equalTo(dateInput.value).once("value").then(snapshot => {
         let exists = false;
-        snapshot.forEach(child => {
-            let record = child.val();
-            if(record.branchKey === branchSelect.value && record.drawer === drawerVal) {
-                exists = true;
-            }
-        });
-
-        if(exists) {
-            alert("⚠️ تنبيه: رقم الدرج (" + drawerVal + ") تم تسجيله مسبقاً في هذا التاريخ لنفس الفرع! لا يمكن الحفظ مرتين.");
-            saveBtn.innerText = originalText;
-            saveBtn.disabled = false;
-            return;
-        }
+        snapshot.forEach(child => { if(child.val().branchKey === branchSelect.value && child.val().drawer === drawerVal) exists = true; });
+        if(exists) { alert("⚠️ رقم الدرج مسجل مسبقاً!"); saveBtn.innerText = "💾 حفظ البيانات"; saveBtn.disabled = false; return; }
 
         let data={ branchKey:branchSelect.value, branchName:branchSelect.options[0].text, drawerManager:drawerManager.value, reviewer:reviewer.value, date:dateInput.value, day:dayInput.value, drawer:drawerVal, cash:+cash.value||0, insta:instaArr, wallet:walletArr, visa:visaArr, purchases, expenses, total:total.value, actual:actual.value, diff:diff.value, timestamp: new Date().getTime() };
-        
         return db.ref("treasury").push(data).then(()=>{ 
             currentSavedData = data; 
             document.getElementById("successDrawer").innerText = "رقم الدرج: " + drawerVal; 
             document.getElementById("successPopup").style.display = "flex"; 
-            saveBtn.innerText = originalText;
-            saveBtn.disabled = false;
+            saveBtn.innerText = "💾 حفظ البيانات"; saveBtn.disabled = false;
         });
-    })
-    .catch(error => {
-        alert("حدث خطأ أثناء الاتصال بقاعدة البيانات: " + error.message);
-        saveBtn.innerText = originalText;
-        saveBtn.disabled = false;
-    });
+    }).catch(e => { alert("خطأ في الحفظ"); saveBtn.disabled = false; });
 }
 
 function sum(arr) { return !arr ? 0 : arr.reduce((a, b) => a + (parseFloat(b.amount) || 0), 0); }
 window.printSingleRecord = function() { if(currentSavedData) printThermal(currentSavedData, false); }
 
 function printThermal(d, isAgg) {
-    const area = document.getElementById("thermalArea");
-    area.style.display = "block";
+    const area = document.getElementById("thermalArea"); area.style.display = "block";
     const branchTitle = isAgg ? Array.from(d.branchNames).join(" + ") : d.branchName;
     area.innerHTML = `
-        <div class="print-header">
-            <h2 class="header-branch-name">${branchTitle}</h2>
-            <div style="font-size:10px; font-weight:bold;">تقرير تسليم درج</div>
-        </div>
-        <table class="receipt-table">
-            <tr><td>اليوم: ${d.day}</td><td>التاريخ: ${d.date}</td><td>الدرج: ${d.drawer}</td></tr>
-        </table>
-        <table class="receipt-table" style="font-size:14px;">
-            <tr style="background:#eee"><th>البيان</th><th>القيمة</th></tr>
-            <tr><td>إجمالي الكاش</td><td>${d.cash}</td></tr>
-            <tr><td>انستا باي</td><td>${sum(d.insta)}</td></tr>
-            <tr><td>محافظ</td><td>${sum(d.wallet)}</td></tr>
-            <tr><td>مبيعات فيزا</td><td>${sum(d.visa)}</td></tr>
-            <tr><td>إجمالي الحساب</td><td>${d.total}</td></tr>
-            <tr style="background:#f0f0f0; font-size:17px;"><td>مبلغ pos</td><td>${d.actual}</td></tr>
-            <tr style="color:${+d.diff < 0 ? 'red' : 'green'}"><td>الفرق-/+ </td><td style="direction:ltr;">${d.diff}</td></tr>
-        </table>
-        ${renderSubTablePrint("تفاصيل انستا", d.insta, 'trans')}
-        ${renderSubTablePrint("تفاصيل المحافظ", d.wallet, 'trans')}
-        ${renderSubTablePrint("تفاصيل المشتريات", d.purchases, 'exp')}
-        ${renderSubTablePrint("تفاصيل المصروفات", d.expenses, 'exp')}
+        <div class="print-header"><h2 class="header-branch-name">${branchTitle}</h2><div style="font-size:10px; font-weight:bold;">تقرير تسليم درج</div></div>
+        <table class="receipt-table"><tr><td>اليوم: ${d.day}</td><td>التاريخ: ${d.date}</td><td>الدرج: ${d.drawer}</td></tr></table>
+        <table class="receipt-table" style="font-size:14px;"><tr style="background:#eee"><th>البيان</th><th>القيمة</th></tr>
+        <tr><td>إجمالي الكاش</td><td>${d.cash}</td></tr><tr><td>انستا باي</td><td>${sum(d.insta)}</td></tr>
+        <tr><td>محافظ</td><td>${sum(d.wallet)}</td></tr><tr><td>مبيعات فيزا</td><td>${sum(d.visa)}</td></tr>
+        <tr><td>إجمالي الحساب</td><td>${d.total}</td></tr><tr style="background:#f0f0f0; font-size:17px;"><td>مبلغ pos</td><td>${d.actual}</td></tr>
+        <tr style="color:${+d.diff < 0 ? 'red' : 'green'}"><td>الفرق-/+ </td><td style="direction:ltr;">${d.diff}</td></tr></table>
+        ${renderSubTablePrint("تفاصيل انستا", d.insta, 'trans')}${renderSubTablePrint("تفاصيل المحافظ", d.wallet, 'trans')}
+        ${renderSubTablePrint("تفاصيل المشتريات", d.purchases, 'exp')}${renderSubTablePrint("تفاصيل المصروفات", d.expenses, 'exp')}
         ${renderSubTablePrint("تفاصيل الفيزا", d.visa, 'visa')}
         <div style="display:flex; justify-content:space-between; margin-top:15px; border-top:1.5px solid #000; padding-top:8px; font-size:10px;">
             <div>المسؤول: ${d.drawerManager}</div><div>المراجع: ${d.reviewer}</div>
@@ -557,11 +450,9 @@ function renderSubTablePrint(title, arr, type) {
         else h += `<td>${x.amount}</td><td>${x.note}</td><td>${x.user}</td>`;
         h += `</tr>`;
     });
-    let totalValue = sum(arr);
-    h += `<tr style="background:#eee"><td>إجمالي</td><td colspan="2">${totalValue.toFixed(2)}</td></tr></tbody></table>`;
+    h += `<tr style="background:#eee"><td>إجمالي</td><td colspan="2">${sum(arr).toFixed(2)}</td></tr></tbody></table>`;
     return h;
 }
-
 });
 </script>
 </body>

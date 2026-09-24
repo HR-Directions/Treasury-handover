@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تسجيل الدرج | الكاشير المطور</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Google Fonts: Cairo -->
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<!-- FontAwesome Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+    :root {
+        --primary: #4f46e5; /* Indigo 600 */
+        --primary-hover: #4338ca; /* Indigo 700 */
+        --secondary: #0ea5e9; /* Sky 500 */
+    }
+
+    body { 
+        font-family: 'Cairo', sans-serif; 
+        background-color: #f8fafc; /* Very light slate */
+        color: #334155;
+    }
+    
+    /* Toast Notifications */
+    #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+    .toast { padding: 16px 24px; border-radius: 12px; color: white; font-weight: 600; font-size: 0.95rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); transform: translateX(120%); transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease-out; opacity: 0; display: flex; align-items: center; gap: 12px; }
+    .toast i { font-size: 1.25rem; }
+    .toast.show { transform: translateX(0); opacity: 1; }
+    .toast.error { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+    .toast.success { background: linear-gradient(135deg, #10b981, #047857); }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* Inputs */
+    .custom-input { 
+        width: 100%; padding: 10px 16px; border-radius: 10px; border: 1.5px solid #e2e8f0; 
+        outline: none; transition: all 0.3s ease; background: #fff; color: #1e293b; font-weight: 600;
+    }
+    .custom-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15); }
+    .custom-input[readonly] { background-color: #f8fafc; color: #64748b; border-color: #f1f5f9; cursor: not-allowed; }
+    .custom-input::placeholder { color: #94a3b8; font-weight: 500; }
+
+    /* Buttons */
+    .btn { 
+        padding: 10px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; 
+        transition: all 0.2s ease; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; 
+    }
+    .btn:active { transform: scale(0.96); }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; box-shadow: 0 4px 12px rgba(79,70,229,0.3); }
+    .btn-primary:hover { box-shadow: 0 6px 16px rgba(79,70,229,0.4); transform: translateY(-1px); }
+    
+    .btn-success { background: linear-gradient(135deg, #10b981, #059669); color: white; box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
+    .btn-success:hover { box-shadow: 0 6px 16px rgba(16,185,129,0.4); transform: translateY(-1px); }
+    
+    .btn-outline { background: white; color: #475569; border: 1.5px solid #cbd5e1; }
+    .btn-outline:hover { background: #f8fafc; border-color: #94a3b8; }
+
+    .btn-icon-only { width: 32px; height: 32px; padding: 0; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; }
+    .remove-btn { background: #fee2e2; color: #ef4444; cursor: pointer; transition: all 0.2s; }
+    .remove-btn:hover { background: #ef4444; color: white; }
+
+    /* Modern Table */
+    .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; background: #fff; }
+    .modern-table { width: 100%; border-collapse: collapse; text-align: center; }
+    .modern-table th { background-color: #f8fafc; color: #475569; font-weight: 700; padding: 14px 10px; border-bottom: 2px solid #e2e8f0; font-size: 0.9rem; }
+    .modern-table td { padding: 12px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; font-size: 0.95rem; font-weight: 600; color: #334155; }
+    .modern-table tbody tr:last-child td { border-bottom: none; }
+    .modern-table tbody tr:hover { background-color: #f8fafc; }
+
+    /* Modals */
+    .popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 1000; opacity: 0; transition: opacity 0.3s ease; }
+    .popup-overlay.active { display: flex; opacity: 1; }
+    .popup-content { background: #fff; padding: 32px; width: 92%; max-width: 420px; border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); transform: translateY(30px) scale(0.95); transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .popup-overlay.active .popup-content { transform: translateY(0) scale(1); }
+    .close-modal { position: absolute; top: 20px; left: 20px; color: #94a3b8; cursor: pointer; transition: color 0.2s; font-size: 1.25rem; }
+    .close-modal:hover { color: #ef4444; }
+
+    /* Cards */
+    .glass-card { background: #ffffff; border-radius: 20px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); border: 1px solid rgba(226, 232, 240, 0.8); }
+    
+    .ltr-dir { direction: ltr; }
+
+    /* Print Styles */
+    @media print {
+        @page { size: 80mm auto; margin: 0; }
+        body * { visibility: hidden; }
+        #thermalArea, #thermalArea * { visibility: visible; }
+        #thermalArea { position: absolute; left: 0; top: 0; width: 80mm; padding: 5mm; margin: 0; font-family: 'Tahoma', sans-serif; direction: rtl; color: #000; zoom: 90%; background: #fff; }
+        .print-header { text-align: center; margin-bottom: 10px; border-bottom: 2px dashed #000; padding-bottom: 5px;}
+        .header-branch-name { margin: 5px 0; font-size: 18px; font-weight: bold;}
+        .receipt-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 13px; text-align: center; }
+        .receipt-table th, .receipt-table td { border: 1px solid #000; padding: 5px; }
+        .receipt-table th { background-color: #f0f0f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .popup-overlay, #toast-container { display: none !important; }
+    }
+</style>
+</head>
+<body class="pb-12">
+
+<div id="thermalArea" style="display:none;"></div>
+<div id="toast-container"></div>
+
+<div class="popup-overlay active" id="loginPopup">
+  <div class="popup-content text-center relative">
+    <div class="mx-auto mb-6 w-24 h-24 bg-gradient-to-br from-indigo-500 to-sky-400 rounded-[2rem] flex items-center justify-center shadow-xl shadow-indigo-500/30 transform rotate-3 hover:rotate-0 transition-transform duration-300">
+        <i class="fa-solid fa-cash-register text-4xl text-white"></i>
+    </div>
+    <h3 class="text-3xl font-black mb-2 text-slate-800">الكاشير المطور</h3>
+    <p class="text-slate-500 mb-8 font-medium">قم بتسجيل الدخول للوصول إلى النظام</p>
+    
+    <div class="space-y-4">
+        <div class="relative">
+            <i class="fa-solid fa-store absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input id="loginCode" class="custom-input text-lg pr-12 text-center" placeholder="كود الفرع" autocomplete="off">
+        </div>
+        <div class="relative">
+            <i class="fa-solid fa-lock absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="password" id="loginPassword" class="custom-input text-lg pr-12 text-center" placeholder="الرقم السري">
+        </div>
+        <button id="loginBtn" class="btn btn-primary w-full text-lg py-3.5 mt-4">
+            تسجيل الدخول <i class="fa-solid fa-arrow-left mr-2"></i>
+        </button>
+    </div>
+</div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 mt-6 hidden space-y-6" id="mainContainer">
+    
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8 bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
+                <i class="fa-solid fa-wallet text-2xl"></i>
+            </div>
+            <div>
+                <h2 class="text-2xl font-black text-slate-800">إدارة وتسجيل الدرج</h2>
+                <p class="text-sm text-slate-500 font-semibold" id="headerDateDisplay">جاري التحميل...</p>
+            </div>
+        </div>
+        <button class="btn btn-outline" onclick="location.reload()">
+            <i class="fa-solid fa-power-off text-red-500"></i> خروج
+        </button>
+    </div>
+
+    <div class="glass-card">
+        <div class="flex items-center gap-3 mb-5 border-b border-slate-100 pb-3">
+            <i class="fa-solid fa-file-invoice text-indigo-500 text-xl"></i>
+            <h3 class="text-xl font-bold text-slate-800">البيانات الأساسية</h3>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div>
+                <label class="block text-sm font-bold text-slate-600 mb-1.5"><i class="fa-solid fa-code-branch ml-1 text-slate-400"></i> الفرع</label>
+                <select id="branch" class="custom-input bg-slate-50"></select>
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-slate-600 mb-1.5"><i class="fa-regular fa-calendar ml-1 text-slate-400"></i> التاريخ <span class="text-red-500">*</span></label>
+                <input type="date" id="date" class="custom-input text-left ltr-dir">
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-slate-600 mb-1.5"><i class="fa-regular fa-clock ml-1 text-slate-400"></i> اليوم</label>
+                <input id="day" readonly placeholder="تلقائي" class="custom-input">
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-slate-600 mb-1.5"><i class="fa-solid fa-box-archive ml-1 text-slate-400"></i> رقم الدرج</label>
+                <input id="drawer" class="custom-input" placeholder="أدخل رقم الدرج">
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-card">
+        <div class="flex items-center gap-3 mb-5 border-b border-slate-100 pb-3">
+            <i class="fa-solid fa-chart-line text-emerald-500 text-xl"></i>
+            <h3 class="text-xl font-bold text-slate-800">ملخص الحركات المالية</h3>
+        </div>
+        <div class="table-container">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th class="w-1/3 text-right pr-6">نوع الحركة</th>
+                        <th class="w-1/3">المبلغ / الإجراء</th>
+                        <th class="w-1/3">الإجمالي</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Cash -->
+                    <tr>
+                        <td class="text-right pr-6">
+                            <div class="flex items-center gap-2 font-bold text-slate-700">
+                                <i class="fa-solid fa-money-bill-wave text-emerald-500"></i> النقدية الكاش <span class="text-red-500">*</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="flex gap-2 justify-center">
+                                <input id="cash" oninput="convertNumber(this);calc()" placeholder="0" class="custom-input !w-32 font-black text-lg text-emerald-600 text-center">
+                                <button class="btn btn-primary !px-3" onclick="openCashDenomPopup()" title="حاسبة الفئات">
+                                    <i class="fa-solid fa-calculator"></i>
+                                </button>
+                            </div>
+                        </td>
+                        <td class="text-slate-400 font-bold">-</td>
+                    </tr>
+                    <!-- InstaPay -->
+                    <tr>
+                        <td class="text-right pr-6">
+                            <div class="flex items-center gap-2 font-bold text-slate-700">
+                                <i class="fa-solid fa-bolt text-indigo-500"></i> مبيعات انستا باي
+                            </div>
+                        </td>
+                        <td><button class="btn btn-outline text-sm !py-1.5" onclick="openPopup('insta')"><i class="fa-solid fa-plus text-indigo-500"></i> إضافة عملية</button></td>
+                        <td><input id="instaTotal" class="custom-input !w-32 font-bold text-indigo-600 !bg-indigo-50/50" readonly value="0.00"></td>
+                    </tr>
+                    <!-- E-Wallet -->
+                    <tr>
+                        <td class="text-right pr-6">
+                            <div class="flex items-center gap-2 font-bold text-slate-700">
+                                <i class="fa-solid fa-mobile-screen-button text-purple-500"></i> محافظ إلكترونية (E-Wallets)
+                            </div>
+                        </td>
+                        <td><button class="btn btn-outline text-sm !py-1.5" onclick="openPopup('wallet')"><i class="fa-solid fa-plus text-purple-500"></i> إضافة عملية</button></td>
+                        <td><input id="walletTotal" class="custom-input !w-32 font-bold text-purple-600 !bg-purple-50/50" readonly value="0.00"></td>
+                    </tr>
+                    <!-- Visa -->
+                    <tr>
+                        <td class="text-right pr-6">
+                            <div class="flex items-center gap-2 font-bold text-slate-700">
+                                <i class="fa-regular fa-credit-card text-orange-500"></i> مبيعات فيزا
+                            </div>
+                        </td>
+                        <td><button class="btn btn-outline text-sm !py-1.5" onclick="openPopup('visa')"><i class="fa-solid fa-plus text-orange-500"></i> إضافة باتش</button></td>
+                        <td><input id="visaTotal" class="custom-input !w-32 font-bold text-orange-600 !bg-orange-50/50" readonly value="0.00"></td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr class="bg-slate-100/50">
+                        <td class="text-right pr-6 py-4 font-black text-slate-800 text-lg">إجمالي حساب الدرج</td>
+                        <td colspan="2" class="py-4 px-4">
+                            <input id="total" class="custom-input !w-full !text-2xl !bg-slate-200/50 !text-slate-800 !border-slate-300" readonly value="0.00">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-right pr-6 py-4 font-bold text-slate-700 text-lg">
+                            مبلغ الـ POS الفعلي <span class="text-red-500">*</span>
+                        </td>
+                        <td colspan="2" class="py-4 px-4">
+                            <input id="actual" oninput="convertNumber(this);calc()" placeholder="أدخل مبلغ الـ POS الفعلي المتوفر" class="custom-input !w-full !text-xl focus:!border-blue-500 !border-blue-200">
+                        </td>
+                    </tr>
+                    <tr class="border-t-2 border-slate-200">
+                        <td class="text-right pr-6 py-4 font-black text-slate-700 text-xl">العجز / الزيادة (-/+)</td>
+                        <td colspan="2" class="py-4 px-4">
+                            <input id="diff" class="custom-input !w-full !text-2xl ltr-dir font-black transition-colors duration-300" readonly value="0.00">
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- انستا -->
+        <div class="glass-card flex flex-col !p-0 overflow-hidden">
+            <div class="p-4 bg-indigo-50/50 border-b border-indigo-100 flex items-center justify-between">
+                <h4 class="font-bold text-indigo-700 flex items-center gap-2"><i class="fa-solid fa-bolt"></i> تفاصيل انستا</h4>
+                <span class="text-xs bg-indigo-100 text-indigo-600 px-2 py-1 rounded-md font-bold" id="instaCount">0 عملية</span>
+            </div>
+            <div class="table-container !border-none !rounded-none flex-1">
+                <table class="modern-table text-sm">
+                    <thead class="!bg-white"><tr><th>المبلغ</th><th>الرقم</th><th>الاسم</th><th></th></tr></thead>
+                    <tbody id="instaTable"></tbody>
+                </table>
+            </div>
+            <div class="p-3 bg-indigo-600 text-white text-center font-bold text-sm" id="instaSummary">إجمالي انستا: 0.00</div>
+        </div>
+
+        <!-- محفظة -->
+        <div class="glass-card flex flex-col !p-0 overflow-hidden">
+            <div class="p-4 bg-purple-50/50 border-b border-purple-100 flex items-center justify-between">
+                <h4 class="font-bold text-purple-700 flex items-center gap-2"><i class="fa-solid fa-mobile-screen-button"></i> المحافظ الإلكترونية</h4>
+                <span class="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded-md font-bold" id="walletCount">0 عملية</span>
+            </div>
+            <div class="table-container !border-none !rounded-none flex-1">
+                <table class="modern-table text-sm">
+                    <thead class="!bg-white"><tr><th>المبلغ</th><th>الرقم</th><th>الاسم</th><th></th></tr></thead>
+                    <tbody id="walletTable"></tbody>
+                </table>
+            </div>
+            <div class="p-3 bg-purple-600 text-white text-center font-bold text-sm" id="walletSummary">إجمالي المحافظ: 0.00</div>
+        </div>
+
+        <!-- فيزا -->
+        <div class="glass-card flex flex-col !p-0 overflow-hidden">
+            <div class="p-4 bg-orange-50/50 border-b border-orange-100 flex items-center justify-between">
+                <h4 class="font-bold text-orange-700 flex items-center gap-2"><i class="fa-regular fa-credit-card"></i> تفاصيل الفيزا</h4>
+                <span class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-md font-bold" id="visaCountText">0 باتش</span>
+            </div>
+            <div class="table-container !border-none !rounded-none flex-1">
+                <table class="modern-table text-sm">
+                    <thead class="!bg-white"><tr><th>الباتش</th><th>تفاصيل</th><th>العدد</th><th>المبلغ</th><th></th></tr></thead>
+                    <tbody id="visaTable"></tbody>
+                </table>
+            </div>
+            <div class="p-3 bg-orange-500 text-white text-center font-bold text-sm" id="visaSummary">إجمالي الفيزا: 0.00</div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- المشتريات -->
+        <div class="glass-card">
+            <div class="flex justify-between items-center mb-4">
+                <h4 class="font-bold text-slate-700 flex items-center gap-2"><i class="fa-solid fa-cart-shopping text-sky-500"></i> المشتريات</h4>
+                <button class="btn btn-outline text-xs !py-1.5" onclick="openPopup('purchase')"><i class="fa-solid fa-plus"></i> إضافة</button>
+            </div>
+            <div class="table-container mb-3">
+                <table class="modern-table text-sm">
+                    <thead><tr><th>المبلغ</th><th>البيان</th><th>المستلم</th><th></th></tr></thead>
+                    <tbody id="purchaseTable"></tbody>
+                </table>
+            </div>
+            <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <span class="font-bold text-sm text-slate-600">إجمالي المشتريات:</span>
+                <input id="pTotal" readonly class="custom-input !w-32 !py-1 !text-lg font-bold !bg-transparent !border-none !shadow-none text-left" value="0.00">
+            </div>
+        </div>
+
+        <!-- المصروفات -->
+        <div class="glass-card">
+            <div class="flex justify-between items-center mb-4">
+                <h4 class="font-bold text-slate-700 flex items-center gap-2"><i class="fa-solid fa-hand-holding-dollar text-rose-500"></i> المصروفات</h4>
+                <button class="btn btn-outline text-xs !py-1.5" onclick="openPopup('expense')"><i class="fa-solid fa-plus"></i> إضافة</button>
+            </div>
+            <div class="table-container mb-3">
+                <table class="modern-table text-sm">
+                    <thead><tr><th>المبلغ</th><th>البيان</th><th>المستلم</th><th></th></tr></thead>
+                    <tbody id="expenseTable"></tbody>
+                </table>
+            </div>
+            <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <span class="font-bold text-sm text-slate-600">إجمالي المصروفات:</span>
+                <input id="eTotal" readonly class="custom-input !w-32 !py-1 !text-lg font-bold !bg-transparent !border-none !shadow-none text-left" value="0.00">
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-card mb-10 border-t-4 border-t-primary">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+                <label class="block text-sm font-bold text-slate-600 mb-2"><i class="fa-solid fa-user-tie ml-1 text-slate-400"></i> مسؤول الدرج</label>
+                <select id="drawerManager" class="custom-input"></select>
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-slate-600 mb-2"><i class="fa-solid fa-user-check ml-1 text-slate-400"></i> المراجع</label>
+                <select id="reviewer" class="custom-input"></select>
+            </div>
+        </div>
+        <button id="saveDataBtn" class="btn btn-success w-full text-lg py-4 shadow-lg shadow-emerald-500/20" onclick="saveData()">
+            <i class="fa-solid fa-cloud-arrow-up mr-2 text-xl"></i> حفظ بيانات الدرج وإصدار التقرير
+        </button>
+    </div>
+</div>
+
+<div class="popup-overlay" id="cashDenomPopup">
+    <div class="popup-content w-full max-w-[400px] max-h-[90vh] overflow-y-auto relative p-6">
+        <i class="fa-solid fa-xmark close-modal" onclick="closeCashDenomPopup()"></i>
+        <div class="text-center mb-6">
+            <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 text-xl"><i class="fa-solid fa-money-bill-wave"></i></div>
+            <h4 class="text-xl font-black text-slate-800">حاسبة الفئات النقدية</h4>
+        </div>
+        
+        <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 p-4 rounded-xl mb-5 text-center shadow-inner">
+            <div class="text-sm text-emerald-700 font-bold mb-1">إجمالي النقدية</div>
+            <div class="text-4xl font-black text-emerald-600 tracking-tight"><span id="denomTotal">0</span> <span class="text-lg font-bold text-emerald-500">ج.م</span></div>
+        </div>
+
+        <div class="table-container mb-5 border-none shadow-sm">
+            <table class="modern-table text-sm !text-right">
+                <thead class="bg-slate-50"><tr><th class="!text-right !py-2 pl-2">الفئة</th><th class="!text-center !py-2">العدد</th><th class="!text-left !py-2 pr-2">المبلغ</th></tr></thead>
+                <tbody>
+                    <tr><td class="font-bold text-slate-700 pl-2">200 ج.م</td><td class="!p-1.5"><input type="number" min="0" id="denom_200" oninput="calcCashDenom()" placeholder="0" class="custom-input !py-1.5 !text-center text-sm"></td><td id="sub_200" class="font-bold text-slate-600 text-left pr-2">0</td></tr>
+                    <tr><td class="font-bold text-slate-700 pl-2">100 ج.م</td><td class="!p-1.5"><input type="number" min="0" id="denom_100" oninput="calcCashDenom()" placeholder="0" class="custom-input !py-1.5 !text-center text-sm"></td><td id="sub_100" class="font-bold text-slate-600 text-left pr-2">0</td></tr>
+                    <tr><td class="font-bold text-slate-700 pl-2">50 ج.م</td><td class="!p-1.5"><input type="number" min="0" id="denom_50" oninput="calcCashDenom()" placeholder="0" class="custom-input !py-1.5 !text-center text-sm"></td><td id="sub_50" class="font-bold text-slate-600 text-left pr-2">0</td></tr>
+                    <tr><td class="font-bold text-slate-700 pl-2">20 ج.م</td><td class="!p-1.5"><input type="number" min="0" id="denom_20" oninput="calcCashDenom()" placeholder="0" class="custom-input !py-1.5 !text-center text-sm"></td><td id="sub_20" class="font-bold text-slate-600 text-left pr-2">0</td></tr>
+                    <tr><td class="font-bold text-slate-700 pl-2">10 ج.م</td><td class="!p-1.5"><input type="number" min="0" id="denom_10" oninput="calcCashDenom()" placeholder="0" class="custom-input !py-1.5 !text-center text-sm"></td><td id="sub_10" class="font-bold text-slate-600 text-left pr-2">0</td></tr>
+                    <tr><td class="font-bold text-slate-700 pl-2">5 ج.م</td><td class="!p-1.5"><input type="number" min="0" id="denom_5" oninput="calcCashDenom()" placeholder="0" class="custom-input !py-1.5 !text-center text-sm"></td><td id="sub_5" class="font-bold text-slate-600 text-left pr-2">0</td></tr>
+                    <tr><td class="font-bold text-indigo-600 pl-2 bg-indigo-50/30">1 ج.م</td><td class="!p-1.5 bg-indigo-50/30"><input type="number" min="0" id="denom_1" oninput="calcCashDenom()" placeholder="0" class="custom-input !py-1.5 !text-center text-sm !border-indigo-200"></td><td id="sub_1" class="font-bold text-indigo-600 text-left pr-2 bg-indigo-50/30">0</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="bg-blue-50/50 border border-blue-100 p-4 rounded-xl mb-5">
+            <label class="block text-sm font-bold text-blue-800 mb-2 flex justify-between items-center">
+                <span><i class="fa-solid fa-calculator mr-1"></i> إضافات نقدية أخرى</span>
+                <span class="text-xs font-normal text-blue-600">(اكتب كمعادلة مثل 10+20)</span>
+            </label>
+            <input type="text" id="other_cash_input" oninput="handleOtherCashCalc(this)" placeholder="مثال: 10+20.5+5" class="custom-input ltr-dir text-left mb-2 font-bold text-slate-700 text-lg tracking-wider focus:!border-blue-400">
+            <div class="text-sm font-bold text-blue-700 text-left" dir="ltr">= <span id="other_cash_total" class="text-lg">0</span></div>
+        </div>
+
+        <div class="flex gap-3">
+            <button class="btn btn-success flex-1" onclick="applyCashDenom()"><i class="fa-solid fa-check"></i> تأكيد وإضافة</button>
+            <button class="btn btn-outline flex-1" onclick="closeCashDenomPopup()">إلغاء</button>
+        </div>
+    </div>
+</div>
+
+<div class="popup-overlay" id="popup">
+    <div class="popup-content relative">
+        <i class="fa-solid fa-xmark close-modal" onclick="closePopup()"></i>
+        <div class="text-center mb-6">
+            <div id="popupIcon" class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 text-xl bg-slate-100 text-slate-600"><i class="fa-solid fa-plus"></i></div>
+            <h4 id="popupTitle" class="text-xl font-black text-slate-800">إضافة</h4>
+        </div>
+
+        <div class="space-y-4">
+            <div id="standardFields">
+                <label class="block text-sm font-bold text-slate-600 mb-1.5">المبلغ</label>
+                <input id="amount" placeholder="0.00" oninput="convertNumber(this)" class="custom-input text-lg font-bold">
+            </div>
+            <div id="transferFields" style="display:none" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-600 mb-1.5">رقم الهاتف المحول منه</label>
+                    <select id="mobileSelect" onchange="showName()" class="custom-input"></select>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-600 mb-1.5">اسم العميل (يظهر تلقائياً)</label>
+                    <input id="nameField" placeholder="اسم العميل" readonly class="custom-input">
+                </div>
+            </div>
+            <div id="visaFields" style="display:none" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-600 mb-1.5">رقم الباتش <span class="text-red-500">*</span></label>
+                    <input id="batchNum" placeholder="أدخل رقم الباتش" class="custom-input focus:!border-orange-400">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-600 mb-1.5">تفاصيل الحسبة (مثال: 100+50)</label>
+                    <input id="calcField" placeholder="10+20" oninput="handleVisaCalc(this)" class="custom-input ltr-dir text-left text-lg tracking-wider">
+                </div>
+                <div class="flex gap-3">
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-slate-500 mb-1">الإجمالي</label>
+                        <input id="visaAmount" placeholder="0" readonly class="custom-input bg-orange-50 font-bold text-orange-700 border-none text-center">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-slate-500 mb-1">عدد العمليات</label>
+                        <input id="visaCount" placeholder="0" readonly class="custom-input bg-orange-50 font-bold text-orange-700 border-none text-center">
+                    </div>
+                </div>
+            </div>
+            <div id="noteFields" style="display:none" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-600 mb-1.5">البيان / الترحيلة</label>
+                    <input id="note" placeholder="اكتب التفاصيل هنا..." class="custom-input">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-600 mb-1.5">اسم المستلم / المسؤول</label>
+                    <select id="user" class="custom-input"><option value="">اختر المسؤول</option></select>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6 pt-4 border-t border-slate-100">
+                <button class="btn btn-primary flex-1" onclick="savePopup()"><i class="fa-solid fa-floppy-disk"></i> حفظ وإضافة</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="popup-overlay" id="viewCalcPopup">
+    <div class="popup-content text-center relative max-w-sm">
+        <i class="fa-solid fa-xmark close-modal" onclick="document.getElementById('viewCalcPopup').classList.remove('active')"></i>
+        <div class="w-12 h-12 bg-slate-100 text-slate-600 rounded-full flex items-center justify-center mx-auto mb-3 text-xl"><i class="fa-solid fa-square-root-variable"></i></div>
+        <h3 class="text-xl font-bold text-slate-800 mb-2">تفاصيل حسبة الباتش</h3>
+        <div id="calcDisplayArea" class="bg-slate-50 border border-slate-200 p-5 rounded-xl my-5 text-2xl font-bold ltr-dir break-words text-slate-800 min-h-[80px] flex items-center justify-center tracking-widest shadow-inner"></div>
+        <button class="btn btn-primary w-full" onclick="document.getElementById('viewCalcPopup').classList.remove('active')">حسناً، إغلاق</button>
+    </div>
+</div>
+
+<div class="popup-overlay" id="successPopup">
+    <div class="popup-content text-center max-w-sm">
+        <div class="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 scale-in-center">
+            <i class="fa-solid fa-check text-4xl text-emerald-500"></i>
+        </div>
+        <h3 id="successMsg" class="text-2xl font-black text-slate-800 mb-2">تم الحفظ بنجاح!</h3>
+        <p id="successDrawer" class="text-lg font-bold text-slate-500 mb-8"></p>
+        <div class="space-y-3">
+            <button class="btn btn-primary w-full py-3.5 text-lg shadow-lg shadow-indigo-500/30" onclick="printSingleRecord()">
+                <i class="fa-solid fa-print"></i> طباعة إيصال التقرير
+            </button>
+            <button class="btn btn-outline w-full py-3" onclick="location.reload()">
+                <i class="fa-solid fa-rotate-right"></i> تسجيل درج جديد
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+    // Update Header Date
+    const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('headerDateDisplay').innerText = new Date().toLocaleDateString('ar-EG', dateOptions);
+
+    const firebaseConfig={databaseURL:"https://sample-firebase-ai-app-e4260-default-rtdb.firebaseio.com/"};
+    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+    const db = firebase.database();
+
+    // App State
+    let currentSavedData = null;
+    let cashDenoms = {200: 0, 100: 0, 50: 0, 20: 0, 10: 0, 5: 0, 1: 0};
+    let otherCashAdditionStr = "";
+    let otherCashAdditionAmt = 0;
+
+    let transfers=[], employees=[], instaArr=[], walletArr=[], visaArr=[], purchases=[], expenses=[], mode="";
+
+    // DOM Elements Cache
+    const els = {
+        loginBtn: document.getElementById("loginBtn"), loginCode: document.getElementById("loginCode"), 
+        loginPassword: document.getElementById("loginPassword"), loginPopup: document.getElementById("loginPopup"), 
+        mainContainer: document.getElementById("mainContainer"), branch: document.getElementById("branch"),
+        date: document.getElementById("date"), day: document.getElementById("day"), cash: document.getElementById("cash"), 
+        instaTotal: document.getElementById("instaTotal"), walletTotal: document.getElementById("walletTotal"), 
+        visaTotal: document.getElementById("visaTotal"), total: document.getElementById("total"), 
+        actual: document.getElementById("actual"), diff: document.getElementById("diff"),
+        tables: {
+            insta: document.getElementById("instaTable"), wallet: document.getElementById("walletTable"), 
+            visa: document.getElementById("visaTable"), purchase: document.getElementById("purchaseTable"), 
+            expense: document.getElementById("expenseTable")
+        },
+        totals: { p: document.getElementById("pTotal"), e: document.getElementById("eTotal") },
+        users: { manager: document.getElementById("drawerManager"), reviewer: document.getElementById("reviewer"), uSelect: document.getElementById("user") }
+    };
+
+    window.showToast = function(msg, isError = true) {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        const icon = isError ? '<i class="fa-solid fa-circle-exclamation"></i>' : '<i class="fa-solid fa-circle-check"></i>';
+        toast.className = `toast ${isError ? 'error' : 'success'}`;
+        toast.innerHTML = `${icon} <span>${msg}</span>`;
+        container.appendChild(toast);
+        
+        // Trigger reflow for animation
+        toast.offsetHeight; 
+        toast.classList.add('show');
+        
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 400); // Wait for transition
+        }, 3500);
+    }
+
+    window.openCashDenomPopup = function() {
+        document.getElementById("cashDenomPopup").classList.add("active");
+        [200, 100, 50, 20, 10, 5, 1].forEach(v => {
+            document.getElementById("denom_" + v).value = cashDenoms[v] || "";
+        });
+        document.getElementById("other_cash_input").value = otherCashAdditionStr;
+        handleOtherCashCalc(document.getElementById("other_cash_input"));
+        calcCashDenom();
+    };
+
+    window.closeCashDenomPopup = function() {
+        document.getElementById("cashDenomPopup").classList.remove("active");
+    };
+
+    window.handleOtherCashCalc = function(el) {
+        el.value = el.value.replace(/[٠-٩]/g, d => d.charCodeAt(0) - 1632).replace(/[۰-۹]/g, d => d.charCodeAt(0) - 1776);
+        let val = el.value;
+        otherCashAdditionStr = val;
+        if(!val) { 
+            otherCashAdditionAmt = 0; 
+            document.getElementById("other_cash_total").innerText = "0"; 
+        } else {
+            let clean = val.replace(/[^0-9+.]/g, '');
+            let parts = clean.split('+').filter(p => p !== "");
+            otherCashAdditionAmt = parts.reduce((a, b) => a + parseFloat(b || 0), 0);
+            document.getElementById("other_cash_total").innerText = otherCashAdditionAmt.toFixed(2);
+        }
+        calcCashDenom();
+    };
+
+    window.calcCashDenom = function() {
+        let totalAmt = 0;
+        [200, 100, 50, 20, 10, 5, 1].forEach(v => {
+            let el = document.getElementById("denom_" + v);
+            if(el) {
+                el.value = el.value.replace(/[٠-٩]/g, d => d.charCodeAt(0) - 1632).replace(/[۰-۹]/g, d => d.charCodeAt(0) - 1776);
+                let count = parseInt(el.value) || 0;
+                let sub = count * v;
+                document.getElementById("sub_" + v).innerText = sub;
+                totalAmt += sub;
+            }
+        });
+        totalAmt += otherCashAdditionAmt;
+        document.getElementById("denomTotal").innerText = totalAmt.toFixed(2);
+    };
+
+    window.applyCashDenom = function() {
+        let totalAmt = 0;
+        [200, 100, 50, 20, 10, 5, 1].forEach(v => {
+            let el = document.getElementById("denom_" + v);
+            let count = parseInt(el ? el.value : 0) || 0;
+            cashDenoms[v] = count;
+            totalAmt += count * v;
+        });
+        totalAmt += otherCashAdditionAmt;
+        els.cash.value = totalAmt;
+        calc();
+        closeCashDenomPopup();
+    };
+
+    window.handleVisaCalc = function(el) {
+        el.value = el.value.replace(/[٠-٩]/g, d => d.charCodeAt(0) - 1632).replace(/[۰-۹]/g, d => d.charCodeAt(0) - 1776);
+        let val = el.value;
+        if(!val) { document.getElementById("visaAmount").value = 0; document.getElementById("visaCount").value = 0; return; }
+        let clean = val.replace(/[^0-9+.]/g, '');
+        let parts = clean.split('+').filter(p => p !== "");
+        let sumVal = parts.reduce((a, b) => a + parseFloat(b || 0), 0);
+        document.getElementById("visaAmount").value = sumVal.toFixed(2);
+        document.getElementById("visaCount").value = parts.length;
+    }
+
+    window.convertNumber=function(el){ if(!el) return; el.value=el.value.replace(/[٠-٩]/g,d=>d.charCodeAt(0)-1632).replace(/[۰-۹]/g,d=>d.charCodeAt(0)-1776); calc(); }
+
+    els.date.addEventListener("change",function(){
+        if(!this.value) { els.day.value = ""; return; }
+        let d=new Date(this.value), days=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+        els.day.value=days[d.getDay()];
+    });
+
+    function handleEnterKey(event) { if (event.key === "Enter") { els.loginBtn.click(); } }
+    els.loginCode.addEventListener("keydown", handleEnterKey);
+    els.loginPassword.addEventListener("keydown", handleEnterKey);
+
+    els.loginBtn.addEventListener("click",function(){
+        let code = els.loginCode.value.trim();
+        let pass = els.loginPassword.value.trim();
+        if(!code || !pass){ showToast("الرجاء إدخال الكود والرقم السري"); return; }
+        let originalText = els.loginBtn.innerHTML;
+        els.loginBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> جاري التحقق...';
+        els.loginBtn.disabled = true;
+
+        db.ref("branches").once("value").then(snapshot => {
+            let found = false;
+            snapshot.forEach(child => {
+                let b = child.val();
+                if(b && b.code != null && b.password != null && String(b.code).trim() === code){
+                    found = true;
+                    if(String(b.password).trim() === pass){
+                        els.loginPopup.classList.remove("active"); 
+                        els.mainContainer.classList.remove("hidden");
+                        els.branch.innerHTML=`<option value="${child.key}">${b.name}</option>`;
+                        els.branch.disabled=true; 
+                        showToast("تم تسجيل الدخول بنجاح", false);
+                        initTreasury(child.key);
+                    } else { showToast("الرقم السري غير صحيح"); }
+                }
+            });
+            if(!found){ showToast("كود الفرع غير موجود"); }
+        }).catch(e => {
+            showToast("خطأ في الاتصال بقاعدة البيانات");
+        }).finally(() => {
+            els.loginBtn.innerHTML = originalText; els.loginBtn.disabled = false;
+        });
+    });
+
+    function initTreasury(bk){
+        db.ref("employees").once("value").then(snap=>{ employees=[]; snap.forEach(e=>{let v=e.val(); if(v) employees.push(v);}); return db.ref("transfers").once("value"); })
+        .then(snap=>{ transfers=[]; snap.forEach(e=>{let v=e.val(); if(v) transfers.push(v);}); filterEmployees(bk); });
+    }
+
+    function filterEmployees(bk){
+        els.users.manager.innerHTML=""; els.users.reviewer.innerHTML=""; els.users.uSelect.innerHTML="<option value=''>اختر المسؤول</option>"; 
+        employees.filter(e=>e.branch==bk).forEach(emp=>{
+            els.users.manager.innerHTML+=`<option value="${emp.name}">${emp.name}</option>`; 
+            els.users.reviewer.innerHTML+=`<option value="${emp.name}">${emp.name}</option>`;
+            els.users.uSelect.innerHTML+=`<option value="${emp.name}">${emp.name}</option>`; 
+        });
+    }
+
+    window.openPopup=function(m){
+        mode=m; 
+        document.getElementById("popup").classList.add("active");
+        
+        let pTitle = "", pIcon = "", pColor = "";
+        if(m=="insta") { pTitle="إضافة انستا"; pIcon="fa-bolt"; pColor="text-indigo-600 bg-indigo-100"; }
+        else if(m=="wallet") { pTitle="إضافة محفظة إلكترونية"; pIcon="fa-mobile-screen-button"; pColor="text-purple-600 bg-purple-100"; }
+        else if(m=="visa") { pTitle="إضافة باتش فيزا"; pIcon="fa-credit-card"; pColor="text-orange-600 bg-orange-100"; }
+        else if(m=="purchase") { pTitle="إضافة مشتريات"; pIcon="fa-cart-shopping"; pColor="text-sky-600 bg-sky-100"; }
+        else if(m=="expense") { pTitle="إضافة مصروفات"; pIcon="fa-hand-holding-dollar"; pColor="text-rose-600 bg-rose-100"; }
+
+        document.getElementById("popupTitle").innerText = pTitle;
+        document.getElementById("popupIcon").className = `w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 text-xl ${pColor}`;
+        document.getElementById("popupIcon").innerHTML = `<i class="fa-solid ${pIcon}"></i>`;
+
+        document.getElementById("standardFields").style.display = (m=="visa") ? "none" : "block";
+        document.getElementById("transferFields").style.display = (m=="insta" || m=="wallet") ? "block" : "none";
+        document.getElementById("visaFields").style.display = (m=="visa") ? "block" : "none";
+        document.getElementById("noteFields").style.display = (m=="purchase" || m=="expense") ? "block" : "none";
+        let ms=document.getElementById("mobileSelect"); ms.innerHTML="<option value=''>اختر الرقم المحول منه</option>";
+        if(m=="insta" || m=="wallet"){
+            let type = m=="insta" ? "انستا" : "محفظة";
+            transfers.filter(t => t.transferType === type).forEach(t=>{ if(t.mobile) ms.innerHTML+=`<option>${t.mobile}</option>`; });
+        }
+    }
+
+    window.closePopup=function(){document.getElementById("popup").classList.remove("active");}
+    window.showName=function(){ let f=transfers.find(t=>t.mobile==document.getElementById("mobileSelect").value); document.getElementById("nameField").value=f?f.name:""; }
+
+    window.savePopup=function(){
+        if(mode=="visa") {
+            let b = document.getElementById("batchNum").value.trim(), a = parseFloat(document.getElementById("visaAmount").value) || 0, c = parseInt(document.getElementById("visaCount").value) || 0, cd = document.getElementById("calcField").value.trim();
+            if(!b || a <= 0) { showToast("برجاء إكمال بيانات الفيزا بشكل صحيح (تأكد من كتابة حسبة ورقم باتش)"); return; }
+            visaArr.push({batch: b, amount: a, count: c, calcDetails: cd}); renderVisa();
+        } else {
+            let a = +document.getElementById("amount").value || 0, n = document.getElementById("note").value, u = document.getElementById("user").value, ms = document.getElementById("mobileSelect").value, nf = document.getElementById("nameField").value;
+            if(a <= 0) { showToast("المبلغ غير صحيح أو يساوي صفر"); return; }
+            if(mode=="insta"){ if(!ms){showToast("اختر رقم الهاتف"); return;} instaArr.push({amount:a,mobile:ms,name:nf}); renderInsta(); }
+            else if(mode=="wallet"){ if(!ms){showToast("اختر رقم الهاتف"); return;} walletArr.push({amount:a,mobile:ms,name:nf}); renderWallet(); }
+            else if(mode=="purchase"){ if(!u){showToast("اختر المسؤول عن الاستلام"); return;} purchases.push({amount:a,note:n,user:u}); renderPurchases(); }
+            else if(mode=="expense"){ if(!u){showToast("اختر المسؤول عن الاستلام"); return;} expenses.push({amount:a,note:n,user:u}); renderExpenses(); }
+        }
+        document.getElementById("amount").value=document.getElementById("note").value=document.getElementById("batchNum").value=document.getElementById("calcField").value=document.getElementById("visaAmount").value=document.getElementById("visaCount").value=document.getElementById("user").value="";
+        closePopup();
+    }
+
+    function renderInsta(){ 
+        let t=0; els.tables.insta.innerHTML=""; instaArr.forEach((i,idx)=>{ t+=i.amount; els.tables.insta.innerHTML+=`<tr><td class="font-bold">${i.amount}</td><td><span class="text-xs text-slate-500 block ltr-dir">${i.mobile}</span></td><td><span class="text-xs max-w-[80px] truncate block" title="${i.name}">${i.name}</span></td><td><button class="btn-icon-only remove-btn" onclick="removeRow('insta',${idx})"><i class="fa-solid fa-trash-can"></i></button></td></tr>`; }); 
+        els.instaTotal.value=t.toFixed(2); document.getElementById("instaSummary").innerText = `إجمالي انستا: ${t.toFixed(2)}`; document.getElementById("instaCount").innerText = `${instaArr.length} عملية`; calc(); 
+    }
+    function renderWallet(){ 
+        let t=0; els.tables.wallet.innerHTML=""; walletArr.forEach((i,idx)=>{ t+=i.amount; els.tables.wallet.innerHTML+=`<tr><td class="font-bold">${i.amount}</td><td><span class="text-xs text-slate-500 block ltr-dir">${i.mobile}</span></td><td><span class="text-xs max-w-[80px] truncate block" title="${i.name}">${i.name}</span></td><td><button class="btn-icon-only remove-btn" onclick="removeRow('wallet',${idx})"><i class="fa-solid fa-trash-can"></i></button></td></tr>`; }); 
+        els.walletTotal.value=t.toFixed(2); document.getElementById("walletSummary").innerText = `إجمالي المحافظ: ${t.toFixed(2)}`; document.getElementById("walletCount").innerText = `${walletArr.length} عملية`; calc(); 
+    }
+    function renderVisa(){ 
+        let totalAmt=0, totalCount=0; els.tables.visa.innerHTML=""; 
+        visaArr.forEach((v,idx)=>{ 
+            totalAmt += v.amount; totalCount += (v.count || 0);
+            els.tables.visa.innerHTML+=`<tr><td><span class="text-xs font-bold bg-slate-100 px-1 rounded block truncate max-w-[60px]" title="${v.batch}">${v.batch}</span></td><td><button class="btn btn-outline !text-xs !py-1 !px-2 !rounded-md" onclick="viewCalc(${idx})"><i class="fa-solid fa-eye text-slate-400"></i> عرض</button></td><td>${v.count}</td><td class="font-bold">${v.amount}</td><td><button class="btn-icon-only remove-btn" onclick="removeRow('visa',${idx})"><i class="fa-solid fa-trash-can"></i></button></td></tr>`; 
+        }); 
+        els.visaTotal.value = totalAmt.toFixed(2); document.getElementById("visaSummary").innerText = `إجمالي الفيزا: ${totalAmt.toFixed(2)}`; document.getElementById("visaCountText").innerText = `${visaArr.length} باتش`; calc(); 
+    }
+
+    window.viewCalc = function(idx) { document.getElementById("calcDisplayArea").innerText = visaArr[idx].calcDetails || "لا توجد تفاصيل"; document.getElementById("viewCalcPopup").classList.add("active"); }
+
+    function renderPurchases(){ 
+        let t=0; els.tables.purchase.innerHTML=""; purchases.forEach((p,idx)=>{ t+=p.amount; els.tables.purchase.innerHTML+=`<tr><td class="font-bold text-sky-600">${p.amount}</td><td><span class="text-xs text-slate-500">${p.note}</span></td><td><span class="text-xs font-semibold">${p.user}</span></td><td><button class="btn-icon-only remove-btn" onclick="removeRow('purchase',${idx})"><i class="fa-solid fa-trash-can"></i></button></td></tr>`; }); 
+        els.totals.p.value=t.toFixed(2);
+    }
+    function renderExpenses(){ 
+        let t=0; els.tables.expense.innerHTML=""; expenses.forEach((e,idx)=>{ t+=e.amount; els.tables.expense.innerHTML+=`<tr><td class="font-bold text-rose-600">${e.amount}</td><td><span class="text-xs text-slate-500">${e.note}</span></td><td><span class="text-xs font-semibold">${e.user}</span></td><td><button class="btn-icon-only remove-btn" onclick="removeRow('expense',${idx})"><i class="fa-solid fa-trash-can"></i></button></td></tr>`; }); 
+        els.totals.e.value=t.toFixed(2);
+    }
+
+    window.removeRow = function(type, idx) {
+        if(type=='insta'){ instaArr.splice(idx,1); renderInsta(); }
+        else if(type=='wallet'){ walletArr.splice(idx,1); renderWallet(); }
+        else if(type=='visa'){ visaArr.splice(idx,1); renderVisa(); }
+        else if(type=='purchase'){ purchases.splice(idx,1); renderPurchases(); }
+        else if(type=='expense'){ expenses.splice(idx,1); renderExpenses(); }
+    }
+
+    function calc(){
+        els.total.value=((+els.cash.value||0) + (+els.instaTotal.value||0) + (+els.walletTotal.value||0) + (+els.visaTotal.value||0)).toFixed(2);
+        let act = parseFloat(els.actual.value) || 0;
+        let tot = parseFloat(els.total.value) || 0;
+        let diffVal = act - tot;
+        els.diff.value = diffVal.toFixed(2);
+        
+        if(diffVal < 0) els.diff.className = "custom-input !w-full !text-2xl ltr-dir font-black !text-rose-600 !bg-rose-50 !border-rose-300 transition-colors duration-300";
+        else if(diffVal > 0) els.diff.className = "custom-input !w-full !text-2xl ltr-dir font-black !text-emerald-600 !bg-emerald-50 !border-emerald-300 transition-colors duration-300";
+        else els.diff.className = "custom-input !w-full !text-2xl ltr-dir font-black !text-slate-600 !bg-slate-50 transition-colors duration-300";
+    }
+
+    window.saveData=function(){
+        let drawerVal = document.getElementById("drawer").value;
+        if(!els.date.value||!drawerVal||!els.cash.value||!els.actual.value){ showToast("برجاء إكمال البيانات الإجبارية (التاريخ، الدرج، النقدية، الفعلي)"); return; }
+        let saveBtn = document.getElementById("saveDataBtn");
+        let origBtn = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2 text-xl"></i> جاري التدقيق والحفظ...'; saveBtn.disabled = true;
+
+        db.ref("treasury").orderByChild("date").equalTo(els.date.value).once("value").then(snapshot => {
+            let exists = false;
+            snapshot.forEach(child => { if(child.val().branchKey === els.branch.value && child.val().drawer === drawerVal) exists = true; });
+            if(exists) { showToast("⚠️ رقم الدرج مسجل مسبقاً في هذا التاريخ!"); saveBtn.innerHTML = origBtn; saveBtn.disabled = false; return; }
+
+            let data={ 
+                branchKey:els.branch.value, branchName:els.branch.options[0].text, drawerManager:els.users.manager.value, 
+                reviewer:els.users.reviewer.value, date:els.date.value, day:els.day.value, drawer:drawerVal, 
+                cash:+els.cash.value||0, 
+                cashDenoms:cashDenoms, otherCashAmt: otherCashAdditionAmt, otherCashStr: otherCashAdditionStr,
+                insta:instaArr, wallet:walletArr, visa:visaArr, purchases, expenses, 
+                total:els.total.value, actual:els.actual.value, diff:els.diff.value, timestamp: new Date().getTime() 
+            };
+            return db.ref("treasury").push(data).then(()=>{ 
+                currentSavedData = data; 
+                document.getElementById("successDrawer").innerText = "رقم الدرج المحفوظ: " + drawerVal; 
+                document.getElementById("successPopup").classList.add("active"); 
+                saveBtn.innerHTML = origBtn; saveBtn.disabled = false;
+            });
+        }).catch(e => { showToast("حدث خطأ أثناء الحفظ، تحقق من الاتصال بالإنترنت"); saveBtn.disabled = false; saveBtn.innerHTML = origBtn; });
+    }
+
+    function sum(arr) { return !arr ? 0 : arr.reduce((a, b) => a + (parseFloat(b.amount) || 0), 0); }
+    window.printSingleRecord = function() { if(currentSavedData) printThermal(currentSavedData, false); }
+
+    function printThermal(d, isAgg) {
+        const area = document.getElementById("thermalArea"); area.style.display = "block";
+        const branchTitle = isAgg ? Array.from(d.branchNames).join(" + ") : d.branchName;
+        area.innerHTML = `
+            <div class="print-header"><div class="header-branch-name">${branchTitle}</div><div style="font-size:11px; font-weight:bold;">تقرير تسليم درج</div></div>
+            <table class="receipt-table"><tr><td>اليوم: ${d.day}</td><td>التاريخ: ${d.date}</td><td>الدرج: ${d.drawer}</td></tr></table>
+            <table class="receipt-table" style="font-size:14px;"><tr style="background:#f0f0f0"><th colspan="2">ملخص الحساب</th></tr>
+            <tr><td>إجمالي الكاش</td><td style="font-weight:bold">${d.cash}</td></tr><tr><td>انستا باي</td><td>${sum(d.insta)}</td></tr>
+            <tr><td>محافظ إلكترونية</td><td>${sum(d.wallet)}</td></tr><tr><td>مبيعات فيزا</td><td>${sum(d.visa)}</td></tr>
+            <tr style="background:#eee"><td>إجمالي الحساب</td><td style="font-weight:bold">${d.total}</td></tr>
+            <tr style="font-size:16px;"><td>مبلغ POS الفعلي</td><td style="font-weight:bold">${d.actual}</td></tr>
+            <tr><td>الفرق-/+</td><td style="direction:ltr; font-weight:bold">${d.diff}</td></tr></table>
+            ${renderDenomTablePrint(d.cashDenoms, d.otherCashAmt)}
+            ${renderSubTablePrint("تفاصيل انستا", d.insta, 'trans')}
+            ${renderSubTablePrint("تفاصيل المحافظ", d.wallet, 'trans')}
+            ${renderSubTablePrint("مشتريات", d.purchases, 'exp')}
+            ${renderSubTablePrint("مصروفات", d.expenses, 'exp')}
+            ${renderSubTablePrint("فيزا", d.visa, 'visa')}
+            <div style="display:flex; justify-content:space-between; margin-top:15px; border-top:1.5px solid #000; padding-top:8px; font-size:11px;">
+                <div>المسؤول: ${d.drawerManager || 'غير محدد'}</div><div>المراجع: ${d.reviewer || 'غير محدد'}</div>
+            </div>
+            <div style="text-align:center; font-size:9px; margin-top:10px; border-top:1px dashed #ccc; padding-top:4px;">نظام الكاشير المطور - ${new Date().toLocaleString('ar-EG')}</div>
+        `;
+        setTimeout(() => { window.print(); area.style.display = "none"; }, 300);
+    }
+
+    function renderDenomTablePrint(denoms, otherCashAmt) {
+        if(!denoms) return "";
+        let keys = [200, 100, 50, 20, 10, 5, 1];
+        let hasData = keys.some(k => (denoms[k] || 0) > 0) || (otherCashAmt > 0);
+        if(!hasData) return "";
+
+        let h = `<div style="text-align:center; font-weight:bold; margin-top:10px; border-top:1px dashed #000; font-size:11px; padding-top:5px;">-- فئات النقدية --</div><table class="receipt-table"><thead><tr><th>الفئة</th><th>العدد</th><th>المبلغ</th></tr></thead><tbody>`;
+        let totalAmt = 0;
+        keys.forEach(k => {
+            let cnt = denoms[k] || 0;
+            if(cnt > 0) {
+                let amt = cnt * k;
+                totalAmt += amt;
+                h += `<tr><td>${k}</td><td>${cnt}</td><td>${amt}</td></tr>`;
+            }
+        });
+        if(otherCashAmt > 0) {
+            totalAmt += otherCashAmt;
+            h += `<tr><td>إضافات أخرى</td><td>-</td><td>${otherCashAmt}</td></tr>`;
+        }
+        h += `<tr style="background:#eee"><td>الإجمالي</td><td colspan="2" style="font-weight:bold">${totalAmt}</td></tr></tbody></table>`;
+        return h;
+    }
+
+    function renderSubTablePrint(title, arr, type) {
+        if(!arr || arr.length === 0) return "";
+        let h = `<div style="text-align:center; font-weight:bold; margin-top:10px; border-top:1px dashed #000; font-size:11px; padding-top:5px;">-- ${title} --</div><table class="receipt-table"><thead><tr>`;
+        if(type==='visa') h += `<th>باتش</th><th>مبلغ</th>`;
+        else if(type==='trans') h += `<th>مبلغ</th><th>الرقم</th>`;
+        else h += `<th>مبلغ</th><th>بيان</th>`;
+        h += `</tr></thead><tbody>`;
+        arr.forEach(x => {
+            h += `<tr>`;
+            if(type==='visa') h += `<td>${x.batch}</td><td>${x.amount}</td>`;
+            else if(type==='trans') h += `<td>${x.amount}</td><td>${x.mobile}</td>`;
+            else h += `<td>${x.amount}</td><td>${x.note}</td>`;
+            h += `</tr>`;
+        });
+        h += `<tr style="background:#eee"><td>إجمالي</td><td style="font-weight:bold">${sum(arr).toFixed(2)}</td></tr></tbody></table>`;
+        return h;
+    }
+});
+</script>
+</body>
+</html>
